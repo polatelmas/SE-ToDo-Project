@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# virtual env
+env/
+venv/
+.venv/
+
+# dotenv
+.env
+.env.local
+
+# ide
+.vscode/
+.idea/
+
+# db
+*.db
+
+# pip cache
+pip-wheel-metadata/
