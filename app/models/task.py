@@ -1,12 +1,12 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, Boolean, func
-from app.db.base import Base
+from app.db.database import Base
 from app.core.enums import *
 
 class Task(Base):
     __tablename__ = "tasks"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    category_id = Column(Integer, ForeignKey("categories.id"))
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     title = Column(String(255), nullable=False)
     description = Column(Text)
     priority = Column(Enum(priority_level), default=priority_level.MEDIUM, nullable=False)

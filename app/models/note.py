@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, func
-from app.db.base import Base
+from app.db.database import Base
 
 class Note(Base):
     __tablename__ = "notes"

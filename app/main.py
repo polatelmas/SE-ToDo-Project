@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from app.db.database import engine, Base
 from app.routers import auth, tasks, ai, events, notes
+from app.models import user, task, event, note, category
 from pydantic import BaseModel
 
 # Veritabanı tablolarını oluştur (Yoksa oluşturur)
