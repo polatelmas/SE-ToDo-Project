@@ -3,7 +3,7 @@ from app.db.database import engine, Base
 from app.routers import auth, tasks, ai, events, notes, categories
 from app.models import user, task, category, event, note
 
-# Veritabanı tablolarını oluştur (Yoksa oluşturur)
+# Veritabanı tablolarını oluştur
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()

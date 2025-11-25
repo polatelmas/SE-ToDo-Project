@@ -19,6 +19,7 @@ class Task(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     category = relationship("Category", back_populates="tasks")
+    subtasks = relationship("Subtask", backref="task", cascade="all, delete-orphan")
 
 class Subtask(Base):
     __tablename__ = "subTask"
