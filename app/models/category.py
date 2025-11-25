@@ -8,3 +8,5 @@ class Category(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     name = Column(String(50), nullable=False)
     color_code = Column(String(7), default="#3498db")
+
+    tasks = relationship("Task", back_populates="category")

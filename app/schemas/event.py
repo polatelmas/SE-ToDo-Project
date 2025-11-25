@@ -1,8 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
-# Ortak Alanlar
 class EventBase(BaseModel):
     title: str
     start_time: datetime
@@ -10,14 +9,18 @@ class EventBase(BaseModel):
     location: Optional[str] = None
     color_code: Optional[str] = "#3498db"
 
-# Veri Oluştururken (User ID backend'den gelecek)
 class EventCreate(EventBase):
     pass
 
-# Veri Okurken (ID ve User ID dahil)
+class EventUpdate(BaseModel):
+    title: Optional[str] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    location: Optional[str] = None
+    color_code: Optional[str] = None
+    model_config = ConfigDict(extra="ignore")
+
 class EventResponse(EventBase):
     id: int
     user_id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

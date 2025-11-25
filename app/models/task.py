@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, Boolean, func
+from sqlalchemy.orm import relationship
 from app.db.database import Base
 from app.core.enums import *
 
@@ -16,6 +17,8 @@ class Task(Base):
     recurrence_end_date = Column(Date)
     color_code = Column(String(7))
     created_at = Column(DateTime, server_default=func.now())
+
+    category = relationship("Category", back_populates="tasks")
 
 class Subtask(Base):
     __tablename__ = "subTask"

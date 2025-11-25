@@ -1,12 +1,19 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
-# --- CATEGORY SCHEMAS ---
-class CategoryCreate(BaseModel):
+class CategoryBase(BaseModel):
     name: str
-    color_code: str = "#3498db"
+    color_code: Optional[str] = "#3498db"
 
-class CategoryResponse(CategoryCreate):
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    color_code: Optional[str] = None
+    model_config = ConfigDict(extra="ignore")
+
+class CategoryResponse(CategoryBase):
     id: int
     user_id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
