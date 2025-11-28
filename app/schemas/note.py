@@ -21,5 +21,6 @@ class NoteUpdate(BaseModel):
 class NoteResponse(NoteBase):
     id: int
     user_id: int
+    color_code: Optional[str] = None
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
