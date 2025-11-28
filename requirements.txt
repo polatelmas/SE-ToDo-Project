@@ -22,7 +22,9 @@ pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pydantic==2.12.4
 pydantic_core==2.41.5
+PyMySQL==1.1.2
 pypika-tortoise==0.6.2
+python-dotenv==1.2.1
 pytz==2025.2
 requests==2.32.5
 rsa==4.9.1
