@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
 from app.db.database import Base
 
 class Event(Base):
@@ -10,3 +11,6 @@ class Event(Base):
     end_time = Column(DateTime, nullable=False)
     location = Column(String(255))
     color_code = Column(String(7))
+
+    owner = relationship("User", back_populates="events")
+    notes = relationship("Note", back_populates="event")

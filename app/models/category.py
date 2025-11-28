@@ -9,4 +9,6 @@ class Category(Base):
     name = Column(String(50), nullable=False)
     color_code = Column(String(7), default="#3498db")
 
+    owner = relationship("User", back_populates="categories")
     tasks = relationship("Task", back_populates="category")
+    notes = relationship("Note", back_populates="category")

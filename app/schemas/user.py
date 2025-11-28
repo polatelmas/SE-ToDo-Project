@@ -1,11 +1,11 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-    birth_date: Optional[datetime] = None
+    birth_date: Optional[date] = None
 
 class UserCreate(UserBase):
     password: str
