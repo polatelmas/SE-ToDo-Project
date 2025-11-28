@@ -24,7 +24,7 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     category_id: Optional[int] = None
     status_id: int = 1
-    recurrence_type_: int = 1
+    recurrence_type_id: int = 1
     recurrence_end_date : Optional[date] = None
 
 class TaskUpdate(BaseModel):
