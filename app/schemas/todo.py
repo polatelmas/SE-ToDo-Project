@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
-from app.core.enums import task_status
+from app.core.enums import task_status, priority_level, recurrence_type as rec_type
 from app.schemas.category import CategoryResponse
 
 # --- SUBTASK SCHEMAS ---
@@ -17,11 +17,15 @@ class SubTaskResponse(SubTaskCreate):
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
-    priority: str = "MEDIUM"
+    priority: priority_level = priority_level.MEDIUM
     due_date: Optional[datetime] = None
 
 class TaskCreate(TaskBase):
     category_id: Optional[int] = None
+    status: Optional[task_status] = task_status.PENDING
+    recurrence_type: Optional[rec_type] = rec_type.NONE
+    recurrence_end_date : Optional[datetime] = None
+    color_code: Optional[str] = "#3498db"
     pass
 
 class TaskUpdate(BaseModel):
@@ -29,6 +33,11 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     due_date: Optional[datetime] = None
     category_id: Optional[int] = None
+    priority: Optional[priority_level] = priority_level.MEDIUM
+    status: Optional[task_status] = task_status.PENDING
+    recurrence_type: Optional[rec_type] = rec_type.NONE
+    recurrence_end_date : Optional[datetime] = None
+    color_code: Optional[str] = "#3498db"
     model_config = ConfigDict(extra="ignore")
 
 class TaskResponse(TaskBase):
