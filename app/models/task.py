@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, Boolean, func
 from sqlalchemy.orm import relationship
 from app.db.database import Base
-from app.core.enums import *
+from app.models.lookups import TaskStatus, PriorityLevel, RecurrenceType
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -12,8 +12,8 @@ class Task(Base):
     description = Column(Text)
     priority_id = Column(Integer, ForeignKey("priority_levels.id"), default = 2, nullable=False)
     status_id = Column(Integer, ForeignKey("task_statuses.id"), default = 1, nullable=False)
-    due_date = Column(DateTime)
-    recurrence_type_id = Column(Integer, ForeignKey("recurrence_types.id"), default = 1, nullable=False )
+    recurrence_type_id = Column(Integer, ForeignKey("recurrence_types.id"), default = 1, nullable=False ) 
+    due_date = Column(DateTime) 
     recurrence_end_date = Column(Date)
     color_code = Column(String(7))
     created_at = Column(DateTime, server_default=func.now())
@@ -21,6 +21,10 @@ class Task(Base):
     owner = relationship("User", back_populates="tasks")
     category = relationship("Category", back_populates="tasks")
     subtasks = relationship("Subtask", back_populates="task", cascade="all, delete-orphan")
+
+    priority = relationship("PriorityLevel")
+    status = relationship("TaskStatus")
+    recurrence_type = relationship("RecurrenceType")
 
 class Subtask(Base):
     __tablename__ = "subtasks"
