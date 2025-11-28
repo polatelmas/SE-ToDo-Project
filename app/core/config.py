@@ -10,7 +10,6 @@ class Settings:
     VERSION: str = "1.0.0"
         
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY")
-
-    # DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
 
 settings = Settings()
