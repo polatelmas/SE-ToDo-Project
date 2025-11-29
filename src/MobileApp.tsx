@@ -95,6 +95,7 @@ export default function MobileApp() {
             onTaskClick={handleTaskClick}
             taskCompletions={taskCompletions}
             onToggleTask={toggleTaskCompletion}
+            tasks={tasks}
           />
         )}
         
