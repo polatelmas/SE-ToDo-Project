@@ -6,10 +6,11 @@ export interface Task {
   title: string;
   time: string;
   description: string;
-  priority: 'high' | 'low';
+  priority: 'high' | 'low' | 'completed';
   completed: boolean;
   created_at?: string;
   updated_at?: string;
+  due_date?: string;
 }
 
 export interface CreateTaskPayload {
