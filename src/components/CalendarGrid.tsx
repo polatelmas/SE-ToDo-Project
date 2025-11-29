@@ -27,17 +27,7 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
 
   const handleDayClick = (day: DayData) => {
     if (day.isCurrentMonth && day.tasks.length > 0) {
-      // Convert tasks to detailed format with completion state
-      const detailedTasks = day.tasks.map(task => ({
-        id: task.id,
-        title: task.title,
-        time: getTaskTime(task.id),
-        description: getTaskDescription(task.id),
-        priority: task.priority === 'completed' ? (getOriginalPriority(task.id)) : task.priority,
-        completed: task.priority === 'completed'
-      }));
-      
-      setSelectedDay({ day: day.date, tasks: detailedTasks });
+      setSelectedDay({ day: day.date, tasks: day.tasks });
     }
   };
 
@@ -141,57 +131,7 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
   );
 }
 
-// Helper functions for mock data
-function getTaskTime(taskId: string): string {
-  const times: { [key: string]: string } = {
-    '1': '9:00 AM',
-    '2': '2:00 PM',
-    '3': '10:30 AM',
-    '4': '11:00 AM',
-    '5': '2:00 PM',
-    '6': '4:30 PM',
-    '7': '3:00 PM',
-    '8': '5:00 PM',
-    '9': '3:30 PM',
-    '10': '1:00 PM',
-    '11': '10:00 AM'
-  };
-  return times[taskId] || '9:00 AM';
-}
 
-function getTaskDescription(taskId: string): string {
-  const descriptions: { [key: string]: string } = {
-    '1': 'Discuss Q4 roadmap and team progress on current sprint goals.',
-    '2': 'Review pending pull requests and provide feedback to team members.',
-    '3': 'Weekly design review with stakeholders to present new concepts.',
-    '4': 'Plan upcoming sprint and assign tasks to team members.',
-    '5': 'Important call with client to discuss project requirements and timeline.',
-    '6': 'Update project documentation with latest API changes and examples.',
-    '7': 'Refactor authentication module to improve code maintainability.',
-    '8': 'Deploy latest release to production environment after QA approval.',
-    '9': 'Complete QA testing for all new features in the release.',
-    '10': 'Weekly team retrospective and progress review meeting.',
-    '11': 'Kickoff meeting for new project initiative with stakeholders.'
-  };
-  return descriptions[taskId] || '';
-}
-
-function getOriginalPriority(taskId: string): 'high' | 'low' {
-  const originalPriorities: { [key: string]: 'high' | 'low' } = {
-    '1': 'high',
-    '2': 'completed',
-    '3': 'completed',
-    '4': 'high',
-    '5': 'high',
-    '6': 'low',
-    '7': 'completed',
-    '8': 'completed',
-    '9': 'completed',
-    '10': 'low',
-    '11': 'high'
-  };
-  return originalPriorities[taskId] || 'low';
-}
 
 function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: string]: boolean }, apiTasks: Task[] = []): DayData[] {
   const year = currentMonth.getFullYear();
@@ -206,75 +146,20 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  // Use API tasks if available, otherwise fallback to hardcoded data
+  // Group API tasks by day from their due_date field
   const tasksByDay: { [key: number]: Task[] } = {};
   
-  if (apiTasks.length > 0) {
-    // Group API tasks by day
-    apiTasks.forEach(task => {
-      // Extract day from created_at or use default
-      const day = 1; // Default to first day (adjust based on your needs)
-      if (!tasksByDay[day]) {
-        tasksByDay[day] = [];
+  apiTasks.forEach(task => {
+    if (task.due_date) {
+      const taskDate = new Date(task.due_date);
+      const dayOfMonth = taskDate.getDate();
+      
+      if (!tasksByDay[dayOfMonth]) {
+        tasksByDay[dayOfMonth] = [];
       }
-      tasksByDay[day].push(task);
-    });
-  }
-
-  // Fallback to hardcoded data
-  const baseTasks: { [key: number]: { tasks: any[]; hasNote: boolean } } = {
-    3: {
-      tasks: [
-        { id: '1', title: 'Team Meeting', basePriority: 'high' },
-        { id: '2', title: 'Review PRs', basePriority: 'low' }
-      ],
-      hasNote: true
-    },
-    7: {
-      tasks: [
-        { id: '3', title: 'Design Review', basePriority: 'low' }
-      ],
-      hasNote: false
-    },
-    12: {
-      tasks: [
-        { id: '4', title: 'Sprint Planning', basePriority: 'high' }
-      ],
-      hasNote: true
-    },
-    15: {
-      tasks: [
-        { id: '5', title: 'Client Call', basePriority: 'high' },
-        { id: '6', title: 'Update Docs', basePriority: 'low' }
-      ],
-      hasNote: false
-    },
-    18: {
-      tasks: [
-        { id: '7', title: 'Code Refactor', basePriority: 'low' }
-      ],
-      hasNote: true
-    },
-    21: {
-      tasks: [
-        { id: '8', title: 'Deploy to Prod', basePriority: 'high' },
-        { id: '9', title: 'QA Testing', basePriority: 'low' }
-      ],
-      hasNote: false
-    },
-    24: {
-      tasks: [
-        { id: '10', title: 'Weekly Review', basePriority: 'low' }
-      ],
-      hasNote: false
-    },
-    28: {
-      tasks: [
-        { id: '11', title: 'Project Kickoff', basePriority: 'high' }
-      ],
-      hasNote: true
+      tasksByDay[dayOfMonth].push(task);
     }
-  };
+  });
   
   for (let i = 0; i < 42; i++) {
     const date = new Date(startDate);
@@ -284,13 +169,13 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
     const isCurrentMonth = date.getMonth() === month;
     const isToday = date.getTime() === today.getTime();
     
-    const dayData = baseTasks[dayOfMonth] || { tasks: [], hasNote: false };
+    // Get tasks for this day from API data only
+    const dayTasks = tasksByDay[dayOfMonth] || [];
     
     // Map tasks with completion state
-    const tasksWithCompletion: Task[] = dayData.tasks.map(task => ({
-      id: task.id,
-      title: task.title,
-      priority: taskCompletions[task.id] ? 'completed' : task.basePriority
+    const tasksWithCompletion: Task[] = dayTasks.map(task => ({
+      ...task,
+      priority: taskCompletions[task.id] ? 'completed' : task.priority
     }));
     
     days.push({
@@ -298,7 +183,7 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
       isCurrentMonth,
       isToday,
       tasks: isCurrentMonth ? tasksWithCompletion : [],
-      hasNote: isCurrentMonth && dayData.hasNote
+      hasNote: false // Note functionality can be added later
     });
   }
   
