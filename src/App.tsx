@@ -19,7 +19,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sidebarMode, setSidebarMode] = useState<'notes' | 'ai'>('ai');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Centralized task completion state (derived from tasks)
   const [taskCompletions, setTaskCompletions] = useState<TaskCompletionState>({});
