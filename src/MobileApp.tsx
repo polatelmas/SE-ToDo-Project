@@ -46,6 +46,7 @@ export default function MobileApp() {
 
   const toggleTaskCompletion = async (taskId: string) => {
     try {
+      // Capture current state BEFORE any updates
       const currentState = taskCompletions[taskId];
       const newState = !currentState;
       
@@ -66,10 +67,12 @@ export default function MobileApp() {
       );
     } catch (err) {
       console.error('Failed to toggle task:', err);
-      // Revert optimistic update
+      // Revert optimistic update using CAPTURED currentState
+      const currentState = taskCompletions[taskId];
+      const previousState = !currentState; // Inverse of current to get original
       setTaskCompletions(prev => ({
         ...prev,
-        [taskId]: taskCompletions[taskId],
+        [taskId]: previousState,
       }));
     }
   };
