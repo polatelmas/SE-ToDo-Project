@@ -25,6 +25,10 @@ export default function MobileApp() {
     const fetchTasks = async () => {
       try {
         const fetchedTasks = await apiService.getTasks();
+        
+        // Log fetched data to browser console
+        console.log('Fetched tasks from API:', fetchedTasks);
+        
         setTasks(fetchedTasks);
         
         const completions: TaskCompletionState = {};

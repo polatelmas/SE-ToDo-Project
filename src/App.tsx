@@ -33,6 +33,10 @@ export default function App() {
       try {
         setIsLoading(true);
         const fetchedTasks = await apiService.getTasks();
+        
+        // Log fetched data to browser console
+        console.log('Fetched tasks from API:', fetchedTasks);
+        
         setTasks(fetchedTasks);
         
         // Initialize task completions from fetched data
