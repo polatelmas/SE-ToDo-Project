@@ -16,7 +16,7 @@ interface TaskCompletionState {
 export default function MobileApp() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskCompletions, setTaskCompletions] = useState<TaskCompletionState>({});
 
@@ -82,7 +82,7 @@ export default function MobileApp() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
-  const handleTaskClick = (task: any) => {
+  const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setCurrentScreen('taskDetails');
   };

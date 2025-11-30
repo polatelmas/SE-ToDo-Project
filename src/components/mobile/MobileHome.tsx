@@ -10,9 +10,14 @@ interface MobileHomeProps {
   currentMonth: Date;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
-  onTaskClick: (task: any) => void;
+  onTaskClick: (task: Task) => void;
   taskCompletions: { [key: string]: boolean };
   onToggleTask: (taskId: string) => void;
+  tasks: Task[];
+}
+
+interface SelectedDay {
+  day: number;
   tasks: Task[];
 }
 
@@ -20,7 +25,7 @@ export function MobileHome({ currentMonth, onPreviousMonth, onNextMonth, onTaskC
   const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long' });
   const today = new Date();
-  const [selectedDay, setSelectedDay] = useState<{ day: number; tasks: any[] } | null>(null);
+  const [selectedDay, setSelectedDay] = useState<SelectedDay | null>(null);
   
   // Generate calendar days
   const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
@@ -83,9 +88,9 @@ export function MobileHome({ currentMonth, onPreviousMonth, onNextMonth, onTaskC
       priority: task.priority as 'high' | 'low' | 'completed'
     }));
 
-  const handleDayClick = (dayData: any) => {
+  const handleDayClick = (dayData: { day: number; tasks: Task[]; isToday: boolean } | null) => {
     if (dayData && dayData.tasks.length > 0) {
-      setSelectedDay({ day: dayData.day, tasks: dayData.detailedTasks });
+      setSelectedDay({ day: dayData.day, tasks: dayData.tasks });
     }
   };
 
