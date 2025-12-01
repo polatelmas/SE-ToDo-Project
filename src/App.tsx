@@ -217,6 +217,7 @@ export default function App() {
           <div className="w-96 border-l border-gray-200 bg-white hidden lg:block">
             <Sidebar 
               mode={sidebarMode} 
+              userId={userId}
               onClose={() => setIsSidebarOpen(false)} 
             />
           </div>

@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, StickyNote, Send, Bot, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
+import { apiService } from '../services/api';
+import type { Note } from '../services/api';
 
 interface SidebarProps {
   mode: 'notes' | 'ai';
   onClose: () => void;
+  userId: number;
 }
 
 interface Message {
@@ -14,7 +17,7 @@ interface Message {
   timestamp: Date;
 }
 
-export function Sidebar({ mode, onClose }: SidebarProps) {
+export function Sidebar({ mode, onClose, userId }: SidebarProps) {
   return (
     <div className="h-full flex flex-col bg-blue-50/30 overflow-hidden">
       {/* Sidebar Header with Close Button */}
@@ -36,13 +39,40 @@ export function Sidebar({ mode, onClose }: SidebarProps) {
 
       {/* Content Area - Scrollable */}
       <div className="flex-1 overflow-y-auto">
-        {mode === 'notes' ? <NotesContent /> : <AIContent />}
+        {mode === 'notes' ? <NotesContent userId={userId} /> : <AIContent />}
       </div>
     </div>
   );
 }
 
-function NotesContent() {
+function NotesContent({ userId }: { userId: number }) {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchNotes = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const fetchedNotes = await apiService.getNotes(userId);
+        setNotes(fetchedNotes);
+      } catch (err) {
+        console.error('Failed to fetch notes:', err);
+        setError('Failed to load notes');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotes();
+  }, [userId]);
+
   const upcomingTasks = [
     { id: '1', title: 'Team Meeting', date: 'Today, 2:00 PM', priority: 'high' },
     { id: '2', title: 'Review PRs', date: 'Today, 4:30 PM', priority: 'low' },
@@ -59,56 +89,49 @@ function NotesContent() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-8">
-      {/* Upcoming Tasks Section */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="h-4 w-4 text-gray-600" />
-          <h2 className="text-gray-900">Upcoming Tasks</h2>
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500 text-sm">Loading notes...</div>
         </div>
-        
-        <div className="space-y-3">
-          {upcomingTasks.map((task) => (
-            <div
-              key={task.id}
-              className="p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow cursor-pointer"
-            >
-              <div className="flex items-start gap-2">
-                <div
-                  className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                    task.priority === 'high'
-                      ? 'bg-red-500'
-                      : 'bg-blue-500'
-                  }`}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-gray-900 truncate">{task.title}</p>
-                  <p className="text-gray-500 text-xs mt-1">{task.date}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* Quick Notes Section */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <StickyNote className="h-4 w-4 text-gray-600" />
-          <h2 className="text-gray-900">Quick Notes</h2>
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-red-700 text-sm">{error}</p>
         </div>
-        
-        <div className="space-y-3">
-          {quickNotes.map((note) => (
-            <div
-              key={note.id}
-              className="p-3 rounded-lg bg-amber-50 border border-amber-200 hover:shadow-sm transition-shadow cursor-pointer"
-            >
-              <p className="text-gray-700 text-sm leading-relaxed">{note.content}</p>
-              <p className="text-gray-500 text-xs mt-2">{note.date}</p>
-            </div>
-          ))}
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !error && notes.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500 text-sm">No notes yet</p>
         </div>
-      </div>
+      )}
+
+      {/* Fetched Notes Section */}
+      {!isLoading && !error && notes.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <StickyNote className="h-4 w-4 text-gray-600" />
+            <h2 className="text-gray-900">My Notes</h2>
+          </div>
+          
+          <div className="space-y-3">
+            {notes.map((note) => (
+              <div
+                key={note.id}
+                className="p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow cursor-pointer"
+                style={{ borderLeftColor: note.color_code || '#3b82f6', borderLeftWidth: '4px' }}
+              >
+                <p className="text-gray-900 font-medium text-sm">{note.title}</p>
+                <p className="text-gray-600 text-sm mt-1 leading-relaxed">{note.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
