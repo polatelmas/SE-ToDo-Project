@@ -5,9 +5,10 @@ import { Label } from '../ui/label';
 
 interface MobileAddTaskProps {
   onClose: () => void;
+  userId: number;
 }
 
-export function MobileAddTask({ onClose }: MobileAddTaskProps) {
+export function MobileAddTask({ onClose, userId }: MobileAddTaskProps) {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header - Fixed */}

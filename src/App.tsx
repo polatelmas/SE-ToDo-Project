@@ -8,10 +8,12 @@ import { apiService, Task } from './services/api';
 
 // Define task completion state type
 interface TaskCompletionState {
-  [taskId: string]: boolean;
+  [taskId: number]: boolean;
 }
 
 export default function App() {
+  // TODO: Replace with actual userId from authentication context
+  const [userId] = useState<number>(1);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
@@ -32,7 +34,7 @@ export default function App() {
     const fetchTasks = async () => {
       try {
         setIsLoading(true);
-        const fetchedTasks = await apiService.getTasks();
+        const fetchedTasks = await apiService.getTasks(userId);
         
         // Log fetched data to browser console
         console.log('Fetched tasks from API:', fetchedTasks);
@@ -57,7 +59,7 @@ export default function App() {
     fetchTasks();
   }, []);
 
-  const toggleTaskCompletion = async (taskId: string) => {
+  const toggleTaskCompletion = async (taskId: number) => {
     try {
       // Capture current state BEFORE any updates
       const currentState = taskCompletions[taskId];
@@ -76,7 +78,7 @@ export default function App() {
       }
 
       // Call API
-      await apiService.toggleTask(taskId, newState);
+      await apiService.toggleTask(taskId, userId);
       
       // Update tasks array
       setTasks(prev => 
@@ -131,7 +133,7 @@ export default function App() {
 
   const handleTaskAdded = async () => {
     try {
-      const fetchedTasks = await apiService.getTasks();
+      const fetchedTasks = await apiService.getTasks(userId);
       setTasks(fetchedTasks);
       
       const completions: TaskCompletionState = {};
@@ -204,6 +206,7 @@ export default function App() {
         isOpen={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
         onTaskAdded={handleTaskAdded}
+        userId={userId}
       />
     </div>
   );

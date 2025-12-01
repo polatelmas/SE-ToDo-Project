@@ -10,10 +10,12 @@ import { apiService, Task } from './services/api';
 type Screen = 'home' | 'addTask' | 'taskDetails' | 'ai' | 'notes';
 
 interface TaskCompletionState {
-  [taskId: string]: boolean;
+  [taskId: number]: boolean;
 }
 
 export default function MobileApp() {
+  // TODO: Replace with actual userId from authentication context
+  const [userId] = useState<number>(1);
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -24,7 +26,7 @@ export default function MobileApp() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const fetchedTasks = await apiService.getTasks();
+        const fetchedTasks = await apiService.getTasks(userId);
         
         // Log fetched data to browser console
         console.log('Fetched tasks from API:', fetchedTasks);
@@ -44,7 +46,7 @@ export default function MobileApp() {
     fetchTasks();
   }, []);
 
-  const toggleTaskCompletion = async (taskId: string) => {
+  const toggleTaskCompletion = async (taskId: number) => {
     try {
       // Capture current state BEFORE any updates
       const currentState = taskCompletions[taskId];
@@ -57,7 +59,7 @@ export default function MobileApp() {
       }));
 
       // Call API
-      await apiService.toggleTask(taskId, newState);
+      await apiService.toggleTask(taskId, userId);
       
       // Update tasks array
       setTasks(prev => 
@@ -107,7 +109,10 @@ export default function MobileApp() {
         )}
         
         {currentScreen === 'addTask' && (
-          <MobileAddTask onClose={() => setCurrentScreen('home')} />
+          <MobileAddTask 
+            onClose={() => setCurrentScreen('home')} 
+            userId={userId}
+          />
         )}
         
         {currentScreen === 'taskDetails' && (
