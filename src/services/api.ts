@@ -327,6 +327,213 @@ class ApiService {
   async toggleTask(id: number, userId: number): Promise<Task> {
     return this.updateTask(id, userId, { status: 'COMPLETED' });
   }
+
+  // ============= EVENTS METHODS =============
+
+  // Get all events for a user
+  async getEvents(userId: number): Promise<Event[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/events/?user_id=${userId}`, {
+        headers: {
+          ...authService.getAuthHeader(),
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      const data = await this.handleResponse(response, (result) => {
+        if (!Array.isArray(result)) {
+          throw new ApiError(500, 'Expected array response from getEvents, got ' + typeof result);
+        }
+        return result.map((item) => item as Event);
+      });
+
+      console.log('✅ Successfully fetched events for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error fetching events:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to fetch events');
+        }
+        console.error('❌ Network error fetching events:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while fetching events');
+    }
+  }
+
+  // Create new event
+  async createEvent(userId: number, payload: CreateEventPayload): Promise<Event> {
+    try {
+      const response = await fetch(`${this.baseUrl}/events/?user_id=${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authService.getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      const data = await this.handleResponse(response, (result) => result as Event);
+      console.log('✅ Successfully created event for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error creating event:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to create event');
+        }
+        console.error('❌ Network error creating event:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while creating event');
+    }
+  }
+
+  // ============= NOTES METHODS =============
+
+  // Get all notes for a user
+  async getNotes(userId: number): Promise<Note[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/notes/?user_id=${userId}`, {
+        headers: {
+          ...authService.getAuthHeader(),
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      const data = await this.handleResponse(response, (result) => {
+        if (!Array.isArray(result)) {
+          throw new ApiError(500, 'Expected array response from getNotes, got ' + typeof result);
+        }
+        return result.map((item) => item as Note);
+      });
+
+      console.log('✅ Successfully fetched notes for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error fetching notes:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to fetch notes');
+        }
+        console.error('❌ Network error fetching notes:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while fetching notes');
+    }
+  }
+
+  // Create new note
+  async createNote(userId: number, payload: CreateNotePayload): Promise<Note> {
+    try {
+      const response = await fetch(`${this.baseUrl}/notes/?user_id=${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authService.getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      const data = await this.handleResponse(response, (result) => result as Note);
+      console.log('✅ Successfully created note for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error creating note:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to create note');
+        }
+        console.error('❌ Network error creating note:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while creating note');
+    }
+  }
+
+  // ============= CATEGORIES METHODS =============
+
+  // Get all categories for a user
+  async getCategories(userId: number): Promise<Category[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/categories/?user_id=${userId}`, {
+        headers: {
+          ...authService.getAuthHeader(),
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      const data = await this.handleResponse(response, (result) => {
+        if (!Array.isArray(result)) {
+          throw new ApiError(500, 'Expected array response from getCategories, got ' + typeof result);
+        }
+        return result.map((item) => item as Category);
+      });
+
+      console.log('✅ Successfully fetched categories for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error fetching categories:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to fetch categories');
+        }
+        console.error('❌ Network error fetching categories:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while fetching categories');
+    }
+  }
+
+  // Create new category
+  async createCategory(userId: number, payload: CreateCategoryPayload): Promise<Category> {
+    try {
+      const response = await fetch(`${this.baseUrl}/categories/?user_id=${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authService.getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      const data = await this.handleResponse(response, (result) => result as Category);
+      console.log('✅ Successfully created category for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error creating category:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to create category');
+        }
+        console.error('❌ Network error creating category:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while creating category');
+    }
+  }
 }
 
 export const apiService = new ApiService();
