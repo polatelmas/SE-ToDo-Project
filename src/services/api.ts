@@ -534,6 +534,246 @@ class ApiService {
       throw new ApiError(0, 'Unknown error while creating category');
     }
   }
+
+  // ============= NOTES UPDATE/DELETE METHODS =============
+
+  // Update a note
+  async updateNote(id: number, userId: number, payload: Partial<CreateNotePayload>): Promise<Note> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(`${this.baseURL}/notes/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.authService.getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(response.status, errorData.detail || 'Failed to update note', errorData);
+      }
+
+      const data: Note = await response.json();
+      console.log('✅ Successfully updated note for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error updating note:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to update note');
+        }
+        console.error('❌ Network error updating note:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while updating note');
+    }
+  }
+
+  // Delete a note
+  async deleteNote(id: number, userId: number): Promise<void> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(`${this.baseURL}/notes/${id}`, {
+        method: 'DELETE',
+        headers: this.authService.getAuthHeader(),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(response.status, errorData.detail || 'Failed to delete note', errorData);
+      }
+
+      console.log('✅ Successfully deleted note for user', userId);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error deleting note:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to delete note');
+        }
+        console.error('❌ Network error deleting note:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while deleting note');
+    }
+  }
+
+  // ============= EVENTS UPDATE/DELETE METHODS =============
+
+  // Update an event
+  async updateEvent(id: number, userId: number, payload: Partial<CreateEventPayload>): Promise<Event> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(`${this.baseURL}/events/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.authService.getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(response.status, errorData.detail || 'Failed to update event', errorData);
+      }
+
+      const data: Event = await response.json();
+      console.log('✅ Successfully updated event for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error updating event:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to update event');
+        }
+        console.error('❌ Network error updating event:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while updating event');
+    }
+  }
+
+  // Delete an event
+  async deleteEvent(id: number, userId: number): Promise<void> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(`${this.baseURL}/events/${id}`, {
+        method: 'DELETE',
+        headers: this.authService.getAuthHeader(),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(response.status, errorData.detail || 'Failed to delete event', errorData);
+      }
+
+      console.log('✅ Successfully deleted event for user', userId);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error deleting event:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to delete event');
+        }
+        console.error('❌ Network error deleting event:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while deleting event');
+    }
+  }
+
+  // ============= CATEGORIES UPDATE/DELETE METHODS =============
+
+  // Update a category
+  async updateCategory(id: number, userId: number, payload: Partial<CreateCategoryPayload>): Promise<Category> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(`${this.baseURL}/categories/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.authService.getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(response.status, errorData.detail || 'Failed to update category', errorData);
+      }
+
+      const data: Category = await response.json();
+      console.log('✅ Successfully updated category for user', userId, ':', data);
+      return data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error updating category:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to update category');
+        }
+        console.error('❌ Network error updating category:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while updating category');
+    }
+  }
+
+  // Delete a category
+  async deleteCategory(id: number, userId: number): Promise<void> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(`${this.baseURL}/categories/${id}`, {
+        method: 'DELETE',
+        headers: this.authService.getAuthHeader(),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new ApiError(response.status, errorData.detail || 'Failed to delete category', errorData);
+      }
+
+      console.log('✅ Successfully deleted category for user', userId);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error('❌ API Error deleting category:', error.statusCode, error.message);
+        throw error;
+      }
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError(408, 'Request timeout: Failed to delete category');
+        }
+        console.error('❌ Network error deleting category:', error.message);
+        throw new ApiError(0, 'Network error: ' + error.message);
+      }
+      throw new ApiError(0, 'Unknown error while deleting category');
+    }
+  }
 }
 
 export const apiService = new ApiService();

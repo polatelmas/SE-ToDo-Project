@@ -1,4 +1,4 @@
-import { Search, ChevronLeft, ChevronRight, Plus, StickyNote, Sparkles, LogOut } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Plus, StickyNote, Calendar, Sparkles, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
@@ -7,8 +7,8 @@ interface HeaderProps {
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onAddTask: () => void;
-  sidebarMode: 'notes' | 'ai' | null;
-  onSidebarToggle: (mode: 'notes' | 'ai') => void;
+  sidebarMode: 'notes' | 'events' | 'ai' | null;
+  onSidebarToggle: (mode: 'notes' | 'events' | 'ai') => void;
   onLogout?: () => void;
 }
 
@@ -66,6 +66,18 @@ export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, 
               title="Notes Panel"
             >
               <StickyNote className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+
+            <button
+              onClick={() => onSidebarToggle('events')}
+              className={`h-8 w-8 sm:h-9 sm:w-9 rounded-md flex items-center justify-center transition-all flex-shrink-0 ${
+                sidebarMode === 'events'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+              title="Events Panel"
+            >
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
             <button

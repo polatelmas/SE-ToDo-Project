@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Clock, StickyNote, Send, Bot, ChevronRight } from 'lucide-react';
+import { Clock, StickyNote, Send, Bot, ChevronRight, Calendar, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { apiService } from '../services/api';
-import type { Note } from '../services/api';
+import type { Note, Event } from '../services/api';
 
 interface SidebarProps {
-  mode: 'notes' | 'ai';
+  mode: 'notes' | 'events' | 'ai';
   onClose: () => void;
   userId: number;
 }
@@ -25,7 +25,7 @@ export function Sidebar({ mode, onClose, userId }: SidebarProps) {
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 bg-blue-600 rounded-full" />
           <h3 className="text-gray-900">
-            {mode === 'notes' ? 'Notes' : 'AI Copilot'}
+            {mode === 'notes' ? 'Notes' : mode === 'events' ? 'Events' : 'AI Copilot'}
           </h3>
         </div>
         <button
@@ -39,7 +39,9 @@ export function Sidebar({ mode, onClose, userId }: SidebarProps) {
 
       {/* Content Area - Scrollable */}
       <div className="flex-1 overflow-y-auto">
-        {mode === 'notes' ? <NotesContent userId={userId} /> : <AIContent />}
+        {mode === 'notes' && <NotesContent userId={userId} />}
+        {mode === 'events' && <EventsContent userId={userId} />}
+        {mode === 'ai' && <AIContent />}
       </div>
     </div>
   );
@@ -49,6 +51,7 @@ function NotesContent({ userId }: { userId: number }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!userId) {
@@ -72,6 +75,19 @@ function NotesContent({ userId }: { userId: number }) {
 
     fetchNotes();
   }, [userId]);
+
+  const handleDeleteNote = async (noteId: number) => {
+    try {
+      setDeletingId(noteId);
+      await apiService.deleteNote(noteId, userId);
+      setNotes(notes.filter(note => note.id !== noteId));
+    } catch (err) {
+      console.error('Failed to delete note:', err);
+      setError('Failed to delete note');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const upcomingTasks = [
     { id: '1', title: 'Team Meeting', date: 'Today, 2:00 PM', priority: 'high' },
@@ -122,11 +138,26 @@ function NotesContent({ userId }: { userId: number }) {
             {notes.map((note) => (
               <div
                 key={note.id}
-                className="p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow cursor-pointer"
+                className="p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow cursor-pointer group"
                 style={{ borderLeftColor: note.color_code || '#3b82f6', borderLeftWidth: '4px' }}
               >
-                <p className="text-gray-900 font-medium text-sm">{note.title}</p>
-                <p className="text-gray-600 text-sm mt-1 leading-relaxed">{note.content}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-900 font-medium text-sm">{note.title}</p>
+                    <p className="text-gray-600 text-sm mt-1 leading-relaxed">{note.content}</p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteNote(note.id);
+                    }}
+                    disabled={deletingId === note.id}
+                    className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50 p-1"
+                    title="Delete note"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -261,6 +292,141 @@ function AIContent() {
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EventsContent({ userId }: { userId: number }) {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchEvents = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const fetchedEvents = await apiService.getEvents(userId);
+        setEvents(fetchedEvents);
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+        setError('Failed to load events');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [userId]);
+
+  const handleDeleteEvent = async (eventId: number) => {
+    try {
+      setDeletingId(eventId);
+      await apiService.deleteEvent(eventId, userId);
+      setEvents(events.filter(event => event.id !== eventId));
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      setError('Failed to delete event');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatDateRange = (startDate: string, endDate: string): string => {
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `${startStr} - ${endStr}`;
+    } catch {
+      return `${startDate} - ${endDate}`;
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-6 space-y-8">
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500 text-sm">Loading events...</div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !error && events.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500 text-sm">No events scheduled</p>
+        </div>
+      )}
+
+      {/* Fetched Events Section */}
+      {!isLoading && !error && events.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="h-4 w-4 text-gray-600" />
+            <h2 className="text-gray-900">Upcoming Events</h2>
+          </div>
+          
+          <div className="space-y-3">
+            {events.map((event) => (
+              <div
+                key={event.id}
+                className="p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow cursor-pointer group"
+                style={{ borderLeftColor: event.color_code || '#3b82f6', borderLeftWidth: '4px' }}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-900 font-medium text-sm">{event.title}</p>
+                    <p className="text-gray-600 text-xs mt-1">{formatDateRange(event.start_date, event.end_date)}</p>
+                    {event.description && (
+                      <p className="text-gray-500 text-sm mt-2 leading-relaxed">{event.description}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteEvent(event.id);
+                    }}
+                    disabled={deletingId === event.id}
+                    className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50 p-1"
+                    title="Delete event"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

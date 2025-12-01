@@ -24,7 +24,7 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sidebarMode, setSidebarMode] = useState<'notes' | 'ai'>('ai');
+  const [sidebarMode, setSidebarMode] = useState<'notes' | 'events' | 'ai'>('ai');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Centralized task completion state (derived from tasks)
@@ -126,7 +126,7 @@ export default function App() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
-  const handleSidebarToggle = (mode: 'notes' | 'ai') => {
+  const handleSidebarToggle = (mode: 'notes' | 'events' | 'ai') => {
     if (isSidebarOpen && sidebarMode === mode) {
       setIsSidebarOpen(false);
     } else {
