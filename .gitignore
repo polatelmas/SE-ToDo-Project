@@ -23,3 +23,5 @@ venv/
 
 # pip cache
 pip-wheel-metadata/
+
+geminiPrompt.txt

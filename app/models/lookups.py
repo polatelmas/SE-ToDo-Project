@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, TinyInteger
+from sqlalchemy import Column, Integer, String, Boolean, SmallInteger
 from app.db.database import Base
 
 # --- Priority Levels ---
@@ -8,9 +8,9 @@ class PriorityLevel(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(20), unique=True, nullable=False) # 'HIGH', 'MEDIUM', 'LOW'
     label = Column(String(50), nullable=False)             # 'High Priority', 'Medium Priority', 'Low Priority'
-    sort_order = Column(TinyInteger, nullable=False)
+    sort_order = Column(SmallInteger, nullable=False)
 
-# --- Task Statuses ---
+# --- Task Statuses ----
 class TaskStatus(Base):
     __tablename__ = "task_statuses"
     
