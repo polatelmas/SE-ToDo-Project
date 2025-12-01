@@ -1,10 +1,12 @@
 // API Configuration and Task Service
 // Backend Schema Compliant
 
+import { authService } from './auth';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // ============= ERROR HANDLING =============
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(
     public statusCode: number,
     public message: string,
@@ -191,6 +193,9 @@ class ApiService {
   async getTasks(userId: number): Promise<Task[]> {
     try {
       const response = await fetch(`${this.baseUrl}/tasks/?user_id=${userId}`, {
+        headers: {
+          ...authService.getAuthHeader(),
+        },
         signal: AbortSignal.timeout(10000), // 10 second timeout
       });
 
@@ -224,7 +229,10 @@ class ApiService {
     try {
       const response = await fetch(`${this.baseUrl}/tasks/?user_id=${userId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authService.getAuthHeader(),
+        },
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(10000),
       });
@@ -253,7 +261,10 @@ class ApiService {
     try {
       const response = await fetch(`${this.baseUrl}/tasks/${id}?user_id=${userId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authService.getAuthHeader(),
+        },
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(10000),
       });
@@ -282,6 +293,9 @@ class ApiService {
     try {
       const response = await fetch(`${this.baseUrl}/tasks/${id}?user_id=${userId}`, {
         method: 'DELETE',
+        headers: {
+          ...authService.getAuthHeader(),
+        },
         signal: AbortSignal.timeout(10000),
       });
 

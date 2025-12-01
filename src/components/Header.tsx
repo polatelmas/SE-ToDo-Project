@@ -1,4 +1,4 @@
-import { Search, ChevronLeft, ChevronRight, Plus, StickyNote, Sparkles } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Plus, StickyNote, Sparkles, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
@@ -9,9 +9,10 @@ interface HeaderProps {
   onAddTask: () => void;
   sidebarMode: 'notes' | 'ai' | null;
   onSidebarToggle: (mode: 'notes' | 'ai') => void;
+  onLogout?: () => void;
 }
 
-export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, sidebarMode, onSidebarToggle }: HeaderProps) {
+export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, sidebarMode, onSidebarToggle, onLogout }: HeaderProps) {
   const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
@@ -92,6 +93,16 @@ export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, 
             <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-md flex items-center justify-center transition-all flex-shrink-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+          )}
         </div>
       </div>
     </header>

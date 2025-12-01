@@ -5,17 +5,27 @@ import { MobileTaskDetails } from './components/mobile/MobileTaskDetails';
 import { MobileNavigation } from './components/mobile/MobileNavigation';
 import { MobileAI } from './components/mobile/MobileAI';
 import { MobileNotes } from './components/mobile/MobileNotes';
+import { Login } from './components/Login';
 import { apiService, Task } from './services/api';
+import { authService } from './services/auth';
 
 type Screen = 'home' | 'addTask' | 'taskDetails' | 'ai' | 'notes';
+
+interface MobileAppProps {
+  userId?: number;
+  onLogout?: () => void;
+}
 
 interface TaskCompletionState {
   [taskId: number]: boolean;
 }
 
-export default function MobileApp() {
-  // TODO: Replace with actual userId from authentication context
-  const [userId] = useState<number>(1);
+export default function MobileApp({ userId: propUserId, onLogout: propOnLogout }: MobileAppProps) {
+  const [userId, setUserId] = useState<number | null>(() => {
+    if (propUserId) return propUserId;
+    const user = authService.getCurrentUser();
+    return user?.id ?? null;
+  });
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -24,6 +34,8 @@ export default function MobileApp() {
 
   // Fetch tasks on mount
   useEffect(() => {
+    if (!userId) return;
+
     const fetchTasks = async () => {
       try {
         const fetchedTasks = await apiService.getTasks(userId);
@@ -44,7 +56,7 @@ export default function MobileApp() {
     };
 
     fetchTasks();
-  }, []);
+  }, [userId]);
 
   const toggleTaskCompletion = async (taskId: number) => {
     try {
@@ -91,6 +103,20 @@ export default function MobileApp() {
     setSelectedTask(task);
     setCurrentScreen('taskDetails');
   };
+
+  const handleLogout = () => {
+    authService.logout();
+    if (propOnLogout) {
+      propOnLogout();
+    } else {
+      setUserId(null);
+    }
+  };
+
+  // Show login if not authenticated
+  if (!userId) {
+    return <Login onLoginSuccess={(id) => setUserId(id)} />;
+  }
 
   return (
     <div className="h-screen w-screen max-w-[390px] mx-auto bg-white flex flex-col overflow-hidden">
