@@ -138,6 +138,19 @@ export default function MobileApp({ userId: propUserId, onLogout: propOnLogout }
           <MobileAddTask 
             onClose={() => setCurrentScreen('home')} 
             userId={userId}
+            onTaskAdded={async () => {
+              try {
+                const fetchedTasks = await apiService.getTasks(userId);
+                setTasks(fetchedTasks);
+                const completions: TaskCompletionState = {};
+                fetchedTasks.forEach(task => {
+                  completions[task.id] = false;
+                });
+                setTaskCompletions(completions);
+              } catch (err) {
+                console.error('Failed to refresh tasks:', err);
+              }
+            }}
           />
         )}
         

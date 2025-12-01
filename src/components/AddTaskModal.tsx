@@ -46,7 +46,8 @@ export function AddTaskModal({
         title: title.trim(),
         description: description.trim(),
         priority,
-        time: dueDate ? new Date(dueDate).toLocaleTimeString() : undefined,
+        due_date: dueDate || null,
+        color_code: '#3b82f6',
       });
 
       // Reset form
