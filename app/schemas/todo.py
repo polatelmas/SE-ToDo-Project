@@ -7,6 +7,12 @@ from app.schemas.category import CategoryResponse
 # --- SUBTASK SCHEMAS ---
 class SubTaskCreate(BaseModel):
     title: str
+    is_completed: Optional[bool] = False
+
+class SubTaskUpdate(BaseModel):
+    title: Optional[str] = None
+    is_completed: Optional[bool] = None
+    model_config = ConfigDict(extra="ignore")
 
 class SubTaskResponse(SubTaskCreate):
     id: int
@@ -17,7 +23,7 @@ class SubTaskResponse(SubTaskCreate):
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
-    priority_id: int
+    priority_id: int = 2
     due_date: Optional[datetime] = None
     color_code: Optional[str] = "#3498db"
 
