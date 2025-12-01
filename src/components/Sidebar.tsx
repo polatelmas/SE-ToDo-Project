@@ -352,15 +352,15 @@ function EventsContent({ userId }: { userId: number }) {
     }
   };
 
-  const formatDateRange = (startDate: string, endDate: string): string => {
+  const formatDateRange = (startTime: string, endTime: string): string => {
     try {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       return `${startStr} - ${endStr}`;
     } catch {
-      return `${startDate} - ${endDate}`;
+      return `${startTime} - ${endTime}`;
     }
   };
 
@@ -405,7 +405,7 @@ function EventsContent({ userId }: { userId: number }) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="text-gray-900 font-medium text-sm">{event.title}</p>
-                    <p className="text-gray-600 text-xs mt-1">{formatDateRange(event.start_date, event.end_date)}</p>
+                    <p className="text-gray-600 text-xs mt-1">{formatDateRange(event.start_time, event.end_time)}</p>
                     {event.description && (
                       <p className="text-gray-500 text-sm mt-2 leading-relaxed">{event.description}</p>
                     )}
