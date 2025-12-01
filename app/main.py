@@ -32,7 +32,7 @@ app.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 app.include_router(events.router, prefix="/events", tags=["Events"])
 app.include_router(notes.router, prefix="/notes", tags=["Notes"])
 app.include_router(categories.router, prefix="/categories", tags=["Categories"])
-# app.include_router(ai.router, prefix="/ai", tags=["AI"])
+app.include_router(ai.router, prefix="/ai", tags=["AI"])
 
 @app.get("/")
 def root():
