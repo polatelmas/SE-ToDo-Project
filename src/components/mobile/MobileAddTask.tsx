@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { apiService } from '../../services/api';
+import { getPriorityId } from '../../services/enums';
 
 interface MobileAddTaskProps {
   onClose: () => void;
@@ -39,7 +40,7 @@ export function MobileAddTask({ onClose, userId, onTaskAdded }: MobileAddTaskPro
       await apiService.createTask(userId, {
         title: title.trim(),
         description: description.trim(),
-        priority,
+        priority_id: getPriorityId(priority),
         due_date: fullDateTime || null,
         color_code: '#3b82f6',
       });

@@ -2,6 +2,7 @@
 // Backend Schema Compliant
 
 import { authService } from './auth';
+import { transformTaskToAPI, transformTaskFromAPI, getRecurrenceString, getRecurrenceId } from './enums';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -19,43 +20,48 @@ export class ApiError extends Error {
 
 // ============= TYPES & INTERFACES =============
 
-// Task Types
-export type TaskPriority = 'HIGH' | 'MEDIUM' | 'LOW';
-export type TaskStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
-export type RecurrenceType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | null;
-
-export interface Task {
+// Event Types
+export interface Event {
   id: number;
   user_id: number;
   category_id: number | null;
   title: string;
   description: string;
-  priority: TaskPriority;
+  priority_id: number;
   due_date: string | null;
-  status: TaskStatus;
-  recurrence_type: RecurrenceType;
+  status_id: number;
+  recurrence_type_id: number;
   recurrence_end_date: string | null;
   color_code: string;
   created_at?: string;
   updated_at?: string;
+  // Convenience fields (for frontend display)
+  priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+  status?: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  recurrence_type?: string | null;
 }
 
 export interface CreateTaskPayload {
   title: string;
-  description: string;
-  priority: TaskPriority;
+  description?: string;
+  priority_id: number;
   due_date?: string | null;
   category_id?: number | null;
+  status_id?: number;
+  recurrence_type_id?: number;
+  recurrence_end_date?: string | null;
   color_code?: string;
 }
 
 export interface UpdateTaskPayload {
   title?: string;
   description?: string;
-  priority?: TaskPriority;
+  priority_id?: number;
   due_date?: string | null;
-  status?: TaskStatus;
+  status_id?: number;
   category_id?: number | null;
+  recurrence_type_id?: number;
+  recurrence_end_date?: string | null;
   color_code?: string;
 }
 
@@ -203,7 +209,11 @@ class ApiService {
         if (!Array.isArray(result)) {
           throw new ApiError(500, 'Expected array response from getTasks, got ' + typeof result);
         }
-        return result.map((item) => this.validateTask(item));
+        return result.map((item) => {
+          const validated = this.validateTask(item);
+          // Transform API response to frontend format
+          return transformTaskFromAPI(validated);
+        });
       });
 
       console.log('✅ Successfully fetched tasks for user', userId, ':', data);
@@ -227,17 +237,24 @@ class ApiService {
   // Create new task
   async createTask(userId: number, payload: CreateTaskPayload): Promise<Task> {
     try {
+      // Transform frontend payload to API format (string -> IDs)
+      const apiPayload = transformTaskToAPI(payload);
+      
       const response = await fetch(`${this.baseUrl}/tasks/?user_id=${userId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...authService.getAuthHeader(),
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(apiPayload),
         signal: AbortSignal.timeout(10000),
       });
 
-      const data = await this.handleResponse(response, (result) => this.validateTask(result));
+      const data = await this.handleResponse(response, (result) => {
+        const validated = this.validateTask(result);
+        // Transform API response back to frontend format (IDs -> string)
+        return transformTaskFromAPI(validated);
+      });
       console.log('✅ Successfully created task for user', userId, ':', data);
       return data;
     } catch (error) {
@@ -259,17 +276,24 @@ class ApiService {
   // Update task
   async updateTask(id: number, userId: number, payload: UpdateTaskPayload): Promise<Task> {
     try {
+      // Transform frontend payload to API format
+      const apiPayload = transformTaskToAPI(payload);
+      
       const response = await fetch(`${this.baseUrl}/tasks/${id}?user_id=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           ...authService.getAuthHeader(),
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(apiPayload),
         signal: AbortSignal.timeout(10000),
       });
 
-      const data = await this.handleResponse(response, (result) => this.validateTask(result));
+      const data = await this.handleResponse(response, (result) => {
+        const validated = this.validateTask(result);
+        // Transform API response back to frontend format
+        return transformTaskFromAPI(validated);
+      });
       console.log('✅ Successfully updated task', id, 'for user', userId, ':', data);
       return data;
     } catch (error) {

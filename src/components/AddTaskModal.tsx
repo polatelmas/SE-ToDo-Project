@@ -11,6 +11,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { apiService } from "../services/api";
+import { getPriorityId } from "../services/enums";
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -45,7 +46,7 @@ export function AddTaskModal({
       await apiService.createTask(userId, {
         title: title.trim(),
         description: description.trim(),
-        priority,
+        priority_id: getPriorityId(priority),
         due_date: dueDate || null,
         color_code: '#3b82f6',
       });
