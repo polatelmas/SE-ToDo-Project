@@ -5,26 +5,44 @@ import { MobileTaskDetails } from './components/mobile/MobileTaskDetails';
 import { MobileNavigation } from './components/mobile/MobileNavigation';
 import { MobileAI } from './components/mobile/MobileAI';
 import { MobileNotes } from './components/mobile/MobileNotes';
+import { Login } from './components/Login';
 import { apiService, Task } from './services/api';
+import { authService } from './services/auth';
 
 type Screen = 'home' | 'addTask' | 'taskDetails' | 'ai' | 'notes';
 
-interface TaskCompletionState {
-  [taskId: string]: boolean;
+interface MobileAppProps {
+  userId?: number;
+  onLogout?: () => void;
 }
 
-export default function MobileApp() {
+interface TaskCompletionState {
+  [taskId: number]: boolean;
+}
+
+export default function MobileApp({ userId: propUserId, onLogout: propOnLogout }: MobileAppProps) {
+  const [userId, setUserId] = useState<number | null>(() => {
+    if (propUserId) return propUserId;
+    const user = authService.getCurrentUser();
+    return user?.id ?? null;
+  });
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskCompletions, setTaskCompletions] = useState<TaskCompletionState>({});
 
   // Fetch tasks on mount
   useEffect(() => {
+    if (!userId) return;
+
     const fetchTasks = async () => {
       try {
-        const fetchedTasks = await apiService.getTasks();
+        const fetchedTasks = await apiService.getTasks(userId);
+        
+        // Log fetched data to browser console
+        console.log('Fetched tasks from API:', fetchedTasks);
+        
         setTasks(fetchedTasks);
         
         const completions: TaskCompletionState = {};
@@ -38,10 +56,11 @@ export default function MobileApp() {
     };
 
     fetchTasks();
-  }, []);
+  }, [userId]);
 
-  const toggleTaskCompletion = async (taskId: string) => {
+  const toggleTaskCompletion = async (taskId: number) => {
     try {
+      // Capture current state BEFORE any updates
       const currentState = taskCompletions[taskId];
       const newState = !currentState;
       
@@ -52,7 +71,7 @@ export default function MobileApp() {
       }));
 
       // Call API
-      await apiService.toggleTask(taskId, newState);
+      await apiService.toggleTask(taskId, userId);
       
       // Update tasks array
       setTasks(prev => 
@@ -62,10 +81,12 @@ export default function MobileApp() {
       );
     } catch (err) {
       console.error('Failed to toggle task:', err);
-      // Revert optimistic update
+      // Revert optimistic update using CAPTURED currentState
+      const currentState = taskCompletions[taskId];
+      const previousState = !currentState; // Inverse of current to get original
       setTaskCompletions(prev => ({
         ...prev,
-        [taskId]: taskCompletions[taskId],
+        [taskId]: previousState,
       }));
     }
   };
@@ -78,10 +99,24 @@ export default function MobileApp() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
-  const handleTaskClick = (task: any) => {
+  const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setCurrentScreen('taskDetails');
   };
+
+  const handleLogout = () => {
+    authService.logout();
+    if (propOnLogout) {
+      propOnLogout();
+    } else {
+      setUserId(null);
+    }
+  };
+
+  // Show login if not authenticated
+  if (!userId) {
+    return <Login onLoginSuccess={(id) => setUserId(id)} />;
+  }
 
   return (
     <div className="h-screen w-screen max-w-[390px] mx-auto bg-white flex flex-col overflow-hidden">
@@ -95,11 +130,28 @@ export default function MobileApp() {
             onTaskClick={handleTaskClick}
             taskCompletions={taskCompletions}
             onToggleTask={toggleTaskCompletion}
+            tasks={tasks}
           />
         )}
         
         {currentScreen === 'addTask' && (
-          <MobileAddTask onClose={() => setCurrentScreen('home')} />
+          <MobileAddTask 
+            onClose={() => setCurrentScreen('home')} 
+            userId={userId}
+            onTaskAdded={async () => {
+              try {
+                const fetchedTasks = await apiService.getTasks(userId);
+                setTasks(fetchedTasks);
+                const completions: TaskCompletionState = {};
+                fetchedTasks.forEach(task => {
+                  completions[task.id] = false;
+                });
+                setTaskCompletions(completions);
+              } catch (err) {
+                console.error('Failed to refresh tasks:', err);
+              }
+            }}
+          />
         )}
         
         {currentScreen === 'taskDetails' && (

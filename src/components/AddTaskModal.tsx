@@ -16,17 +16,19 @@ interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onTaskAdded?: () => void;
+  userId: number;
 }
 
 export function AddTaskModal({
   isOpen,
   onClose,
   onTaskAdded,
+  userId,
 }: AddTaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [priority, setPriority] = useState<'high' | 'low'>('low');
+  const [priority, setPriority] = useState<'HIGH' | 'MEDIUM' | 'LOW'>('LOW');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,18 +42,19 @@ export function AddTaskModal({
       setIsSubmitting(true);
       setError(null);
 
-      await apiService.createTask({
+      await apiService.createTask(userId, {
         title: title.trim(),
         description: description.trim(),
         priority,
-        time: dueDate ? new Date(dueDate).toLocaleTimeString() : undefined,
+        due_date: dueDate || null,
+        color_code: '#3b82f6',
       });
 
       // Reset form
       setTitle("");
       setDescription("");
       setDueDate("");
-      setPriority('low');
+      setPriority('LOW');
       
       // Notify parent and close
       onTaskAdded?.();
@@ -68,7 +71,7 @@ export function AddTaskModal({
     setTitle("");
     setDescription("");
     setDueDate("");
-    setPriority('low');
+    setPriority('LOW');
     setError(null);
     onClose();
   };
@@ -146,9 +149,9 @@ export function AddTaskModal({
                 <input
                   type="radio"
                   name="priority"
-                  value="high"
-                  checked={priority === 'high'}
-                  onChange={() => setPriority('high')}
+                  value="HIGH"
+                  checked={priority === 'HIGH'}
+                  onChange={() => setPriority('HIGH')}
                   disabled={isSubmitting}
                   className="w-4 h-4 text-red-500 border-gray-300 focus:ring-red-500"
                 />
@@ -159,9 +162,22 @@ export function AddTaskModal({
                 <input
                   type="radio"
                   name="priority"
-                  value="low"
-                  checked={priority === 'low'}
-                  onChange={() => setPriority('low')}
+                  value="MEDIUM"
+                  checked={priority === 'MEDIUM'}
+                  onChange={() => setPriority('MEDIUM')}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 text-yellow-500 border-gray-300 focus:ring-yellow-500"
+                />
+                <span className="text-gray-700">Medium Priority</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="priority"
+                  value="LOW"
+                  checked={priority === 'LOW'}
+                  onChange={() => setPriority('LOW')}
                   disabled={isSubmitting}
                   className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
                 />

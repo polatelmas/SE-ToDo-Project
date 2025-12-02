@@ -3,23 +3,29 @@ import { Header } from './components/Header';
 import { CalendarGrid } from './components/CalendarGrid';
 import { Sidebar } from './components/Sidebar';
 import { AddTaskModal } from './components/AddTaskModal';
+import { Login } from './components/Login';
 import MobileApp from './MobileApp';
 import { apiService, Task } from './services/api';
+import { authService } from './services/auth';
 
 // Define task completion state type
 interface TaskCompletionState {
-  [taskId: string]: boolean;
+  [taskId: number]: boolean;
 }
 
 export default function App() {
+  const [userId, setUserId] = useState<number | null>(() => {
+    const user = authService.getCurrentUser();
+    return user?.id ?? null;
+  });
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sidebarMode, setSidebarMode] = useState<'notes' | 'ai'>('ai');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [sidebarMode, setSidebarMode] = useState<'notes' | 'events' | 'ai'>('ai');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Centralized task completion state (derived from tasks)
   const [taskCompletions, setTaskCompletions] = useState<TaskCompletionState>({});
@@ -29,10 +35,19 @@ export default function App() {
 
   // Fetch tasks on mount
   useEffect(() => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchTasks = async () => {
       try {
         setIsLoading(true);
-        const fetchedTasks = await apiService.getTasks();
+        const fetchedTasks = await apiService.getTasks(userId);
+        
+        // Log fetched data to browser console
+        console.log('Fetched tasks from API:', fetchedTasks);
+        
         setTasks(fetchedTasks);
         
         // Initialize task completions from fetched data
@@ -51,10 +66,11 @@ export default function App() {
     };
 
     fetchTasks();
-  }, []);
+  }, [userId]);
 
-  const toggleTaskCompletion = async (taskId: string) => {
+  const toggleTaskCompletion = async (taskId: number) => {
     try {
+      // Capture current state BEFORE any updates
       const currentState = taskCompletions[taskId];
       const newState = !currentState;
       
@@ -71,7 +87,7 @@ export default function App() {
       }
 
       // Call API
-      await apiService.toggleTask(taskId, newState);
+      await apiService.toggleTask(taskId, userId);
       
       // Update tasks array
       setTasks(prev => 
@@ -81,10 +97,12 @@ export default function App() {
       );
     } catch (err) {
       console.error('Failed to toggle task:', err);
-      // Revert optimistic update
+      // Revert optimistic update using CAPTURED currentState
+      const currentState = taskCompletions[taskId];
+      const previousState = !currentState; // Inverse of current to get original
       setTaskCompletions(prev => ({
         ...prev,
-        [taskId]: taskCompletions[taskId],
+        [taskId]: previousState,
       }));
       setError('Failed to update task. Please try again.');
     }
@@ -108,7 +126,7 @@ export default function App() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
 
-  const handleSidebarToggle = (mode: 'notes' | 'ai') => {
+  const handleSidebarToggle = (mode: 'notes' | 'events' | 'ai') => {
     if (isSidebarOpen && sidebarMode === mode) {
       setIsSidebarOpen(false);
     } else {
@@ -117,14 +135,22 @@ export default function App() {
     }
   };
 
+  // Show login if not authenticated
+  if (!userId) {
+    return <Login onLoginSuccess={(id) => setUserId(id)} />;
+  }
+
   // Show mobile version on small screens
   if (isMobile) {
-    return <MobileApp />;
+    return <MobileApp userId={userId} onLogout={() => {
+      authService.logout();
+      setUserId(null);
+    }} />;
   }
 
   const handleTaskAdded = async () => {
     try {
-      const fetchedTasks = await apiService.getTasks();
+      const fetchedTasks = await apiService.getTasks(userId);
       setTasks(fetchedTasks);
       
       const completions: TaskCompletionState = {};
@@ -169,6 +195,10 @@ export default function App() {
         onAddTask={() => setIsAddTaskModalOpen(true)}
         sidebarMode={isSidebarOpen ? sidebarMode : null}
         onSidebarToggle={handleSidebarToggle}
+        onLogout={() => {
+          authService.logout();
+          setUserId(null);
+        }}
       />
       
       <main className="flex max-w-full">
@@ -187,6 +217,7 @@ export default function App() {
           <div className="w-96 border-l border-gray-200 bg-white hidden lg:block">
             <Sidebar 
               mode={sidebarMode} 
+              userId={userId}
               onClose={() => setIsSidebarOpen(false)} 
             />
           </div>
@@ -197,6 +228,7 @@ export default function App() {
         isOpen={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
         onTaskAdded={handleTaskAdded}
+        userId={userId}
       />
     </div>
   );

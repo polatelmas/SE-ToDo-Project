@@ -3,7 +3,7 @@ import { Clock, Flag } from 'lucide-react';
 interface TaskCardProps {
   title: string;
   date: string;
-  priority: 'high' | 'low';
+  priority: 'high' | 'low' | 'completed';
   onClick: () => void;
   variant?: 'default' | 'compact';
 }
@@ -21,6 +21,12 @@ export function TaskCard({ title, date, priority, onClick, variant = 'default' }
       label: 'Low',
       textColor: 'text-blue-600',
       bgColor: 'bg-blue-50'
+    },
+    completed: {
+      color: 'bg-green-500',
+      label: 'Completed',
+      textColor: 'text-green-600',
+      bgColor: 'bg-green-50'
     }
   };
 

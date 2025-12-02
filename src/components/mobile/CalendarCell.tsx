@@ -1,6 +1,6 @@
 interface CalendarCellProps {
   day?: number;
-  tasks?: Array<{ id: string; priority: 'high' | 'low'; completed?: boolean }>;
+  tasks?: Array<{ id: string; priority: 'high' | 'low' | 'completed'; completed?: boolean }>;
   isToday?: boolean;
   onClick?: () => void;
 }
