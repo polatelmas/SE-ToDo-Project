@@ -8,3 +8,9 @@ data class Category(
     @SerializedName("name") val name: String,
     @SerializedName("color_code") val colorCode: String?
 )
+
+
+data class CreateCategory(
+    @SerializedName("name") val name: String,
+    @SerializedName("color_code") val colorCode: String?
+)

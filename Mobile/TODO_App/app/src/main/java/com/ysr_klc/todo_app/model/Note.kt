@@ -14,3 +14,15 @@ data class Note(
     @SerializedName("color_code") val colorCode: String?,
     @SerializedName("created_at") val createdAt: String?
 )
+
+data class NoteRequest(
+    @SerializedName("title") val title: String,
+    @SerializedName("content") val content: String,
+    @SerializedName("category_id") val categoryId: Int?,
+    @SerializedName("event_id") val eventId: Int?,
+
+    )
+
+data class NoteDelete(
+    @SerializedName("id") val id : Int
+)

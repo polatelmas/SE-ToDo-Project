@@ -1,76 +1,153 @@
 package com.ysr_klc.todo_app.todoService
 
 import com.ysr_klc.todo_app.model.Category
+import com.ysr_klc.todo_app.model.CreateCategory
+import com.ysr_klc.todo_app.model.CreateUpdateEvent
+import com.ysr_klc.todo_app.model.CreateUpdateSubTask
 import com.ysr_klc.todo_app.model.Event
 import com.ysr_klc.todo_app.model.LoginRequest
 import com.ysr_klc.todo_app.model.LoginResponse
+import com.ysr_klc.todo_app.model.Note
+import com.ysr_klc.todo_app.model.NoteRequest
 import com.ysr_klc.todo_app.model.RegisterRequest
+import com.ysr_klc.todo_app.model.SubTask
 import com.ysr_klc.todo_app.model.SyncResponse
 import com.ysr_klc.todo_app.model.Task
-import com.ysr_klc.todo_app.model.TaskCreateRequest
-import com.ysr_klc.todo_app.model.TaskUpdateRequest
+import com.ysr_klc.todo_app.model.TaskCreateUpdateRequest
 import com.ysr_klc.todo_app.model.UserResponse
 import retrofit2.http.GET
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.*
 
 interface TodoAPI {
 
+
+    // --- SYNC (Eğer eklerlerse bu çalışır) ---
+    @GET("sync")
+    suspend fun syncData(@Query("user_id") userId: Int): Response<SyncResponse>
+
+
+
         // --- AUTH ---
+
         @POST("auth/register")
-        fun register(@Body user: RegisterRequest): Call<UserResponse>
+        suspend fun register(@Body user: RegisterRequest): Response<UserResponse>
 
         @POST("auth/login")
-        fun login(@Body creds: LoginRequest): Call<LoginResponse>
+        suspend fun login(@Body creds: LoginRequest): Response<LoginResponse>
 
-
-        // --- SYNC (Eğer eklerlerse bu çalışır) ---
-        @GET("sync")
-        fun syncData(@Query("user_id") userId: Int): Call<SyncResponse>
 
 
         // --- TASKS ---
         @GET("tasks/")
-        fun getTasks(@Query("user_id") userId: Int): Call<List<Task>>
+        suspend fun getTasks(@Query("user_id") userId: Int): Response<List<Task>>
 
         @POST("tasks/")
-        fun createTask(
+        suspend fun createTask(
             @Query("user_id") userId: Int,
-            @Body task: TaskCreateRequest
-        ): Call<Task>
+            @Body task: TaskCreateUpdateRequest
+        ): Response<Task>
 
-        @PUT("tasks/{id}") // Backend PUT kullanmış
-        fun updateTask(
-            @Path("id") taskId: Int,
+        @PUT("tasks/{task_id}")
+        suspend fun updateTask(
+            @Path("task_id") taskId: Int,
             @Query("user_id") userId: Int,
-            @Body task: TaskUpdateRequest
-        ): Call<Task>
+            @Body task: TaskCreateUpdateRequest
+        ): Response<Task>
 
-        @DELETE("tasks/{id}")
-        fun deleteTask(
-            @Path("id") taskId: Int,
+        @DELETE("tasks/{task_id}")
+        suspend fun deleteTask(
+            @Path("task_id") taskId: Int,
             @Query("user_id") userId: Int
-        ): Call<Void>
+        ): Response<Void>
+
+
+
+        //---SUBTASKS---
+        @POST("tasks/{task_id}/subtask/")
+        suspend fun createSubtask(
+            @Path("task_id") taskId: Int,
+            @Query("user_id") userId: Int,
+            @Body task: CreateUpdateSubTask
+        ): Response<Task>
+
+
+        @PUT("tasks/{task_id}/subtask/")
+        suspend fun updateSubtask(
+            @Path("task_id") taskId: Int,
+          @Query("user_id") userId: Int,
+         @Body task: CreateUpdateSubTask
+        ): Response<Task>
+
+        @DELETE("tasks/subtasks/{subtask_id}")
+        suspend fun deleteSubTask(
+            @Path("subtask_id") subtask_id:Int,
+            @Query("user_id") userId: Int
+        ): Response<Void>
+
 
 
         // --- CATEGORIES ---
-        @GET("categories/")
-        fun getCategories(@Query("user_id") userId: Int): Call<List<Category>>
-
         @POST("categories/")
-        fun createCategory(
-            @Query("user_id") userId: Int,
-            @Body category: Category
-        ): Call<Category>
+        suspend fun createCategory(
+             @Query("user_id") userId: Int,
+             @Body category: CreateCategory
+        ): Response<Category>
+
+         @POST("categories/{category_id}")
+         suspend fun updateCategory(
+            @Path("category_id") category_id : Int,
+             @Query("user_id") userId: Int,
+             @Body category: CreateCategory
+         ): Response<Category>
+
+         @DELETE("categories/{category_id}")
+         suspend fun deleteCategory(
+             @Path("category_id") category_id : Int,
+             @Query("user_id") userId: Int,
+
+         ): Response<Void>
+
+         @GET("categories/")
+         suspend fun getCategories(@Query("user_id") userId: Int): Response<List<Category>>
+
 
 
         // --- EVENTS ---
         @GET("events/")
-        fun getEvents(@Query("user_id") userId: Int): Call<List<Event>>
+        suspend fun getEvents(@Query("user_id") userId: Int): Response<List<Event>>
 
         @POST("events/")
-        fun createEvent(
+        suspend fun createEvent(
             @Query("user_id") userId: Int,
-            @Body event: Event
-        ): Call<Event>
+            @Body event: CreateUpdateEvent
+        ): Response<Event>
+
+        @PUT("events/{event_id}")
+        suspend fun updateEvent(
+            @Path("event_id") event_id:Int,
+            @Query("user_id")user_id: Int,
+            @Body event: CreateUpdateEvent
+        ): Response<Event>
+
+        @PUT("events/{event_id}")
+        suspend fun deleteEvent(
+            @Path("event_id") event_id:Int
+        ): Response<Void>
+
+
+
+        //-- NOTES --
+        @GET("notes/")
+        suspend fun getNotes(@Query("user_id") userId: Int): Response<List<Note>>
+
+        @POST("notes/")
+        suspend fun createNote(@Body note: NoteRequest): Response<Note>
+
+        @PUT("notes/{note_id}")
+        suspend fun updateNote(@Path( "note_id") noteId : Int, @Query("user_id") userId: Int): Response<Note>
+
+        @DELETE("notes/{note_id}")
+        suspend fun deleteNote(@Path("note_id") id:Int) : Response<String>
     }

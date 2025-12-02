@@ -1,7 +1,7 @@
 package com.ysr_klc.todo_app.model
 
 import com.google.gson.annotations.SerializedName
-/*
+
 data class Task(
     @SerializedName("id") val id: Int,
     @SerializedName("user_id") val userId: Int,
@@ -25,6 +25,29 @@ data class Task(
     @SerializedName("sub_tasks") val subTasks: List<SubTask> = emptyList()
 )
 
+
+data class TaskCreateUpdateRequest(
+    @SerializedName("category_id") val categoryId: Int?, // Null olabilir (Kategorisiz görev)
+
+    @SerializedName("title") val title: String,
+    @SerializedName("description") val description: String?,
+
+    @SerializedName("priority") val priority: Priority, // Enum (Aşağıda tanımlı)
+    @SerializedName("status") val status: TaskStatus,   // Enum (Aşağıda tanımlı)
+
+    @SerializedName("due_date") val dueDate: String?, // "2025-12-01 15:00:00"
+
+    @SerializedName("recurrence_type") val recurrenceType: RecurrenceType?,
+    @SerializedName("recurrence_end_date") val recurrenceEndDate: String?,
+
+    @SerializedName("color_code") val colorCode: String?, // "#FF5733" gibi
+
+    // Backend join yapıp gönderirse diye opsiyonel liste:
+    @SerializedName("sub_tasks") val subTasks: List<SubTask> = emptyList()
+)
+
+
+
 // Enumlar (Veritabanındaki ENUM değerleriyle BİREBİR aynı olmalı - BÜYÜK HARF)
 enum class Priority {
     @SerializedName("LOW") LOW,
@@ -45,4 +68,3 @@ enum class RecurrenceType {
     @SerializedName("WEEKDAYS") WEEKDAYS,
     @SerializedName("WEEKENDS") WEEKENDS
 }
-*/

@@ -11,3 +11,8 @@ package com.ysr_klc.todo_app.model
 
         @SerializedName("created_at") val createdAt: String?
     )
+
+    data class CreateUpdateSubTask(
+        @SerializedName("title") val title: String,
+        @SerializedName("is_completed") val isCompleted: Boolean
+    )

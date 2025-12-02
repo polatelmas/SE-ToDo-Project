@@ -13,3 +13,15 @@ data class Event(
     @SerializedName("location") val location: String?,
     @SerializedName("color_code") val colorCode: String?
 )
+
+
+data class CreateUpdateEvent(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("title") val title: String,
+
+    @SerializedName("start_time") val startTime: String,
+    @SerializedName("end_time") val endTime: String,
+
+    @SerializedName("location") val location: String?,
+    @SerializedName("color_code") val colorCode: String?
+)

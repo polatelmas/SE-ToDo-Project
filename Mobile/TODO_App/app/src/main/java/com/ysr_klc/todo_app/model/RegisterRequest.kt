@@ -24,34 +24,8 @@ data class LoginResponse(
     val user_id: Int
 )
 
-// --- TASK MODELLERİ ---
-// Backend TaskCreate şeması ID içermez
-data class TaskCreateRequest(
-    val title: String,
-    val description: String?,
-    val priority: String, // "HIGH", "MEDIUM", "LOW"
-    val due_date: String?,
-    val category_id: Int?
-)
 
-// Güncelleme için
-data class TaskUpdateRequest(
-    val title: String?,
-    val is_completed: Boolean?, // Backend şemasında status veya is_completed olabilir, kontrol et
-    val priority: String?
-)
 
-// API'den gelen cevap (Task objesi)
-data class Task(
-    val id: Int,
-    val user_id: Int,
-    val title: String,
-    val description: String?,
-    val priority: String,
-    val is_completed: Boolean = false, // Backend'de default false olabilir
-    val due_date: String?,
-    val created_at: String?
-)
 
 // --- SYNC RESPONSE (Tüm veriler) ---
 data class SyncResponse(
