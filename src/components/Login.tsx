@@ -18,6 +18,34 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleDemoLogin = () => {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // Create mock demo user without backend
+      const demoUser = {
+        id: 999,
+        username: 'demo_user',
+        email: 'demo@example.com',
+      };
+
+      const demoToken = 'demo_token_' + Date.now();
+
+      // Store in localStorage (same as auth service does)
+      localStorage.setItem('auth_token', demoToken);
+      localStorage.setItem('auth_user', JSON.stringify(demoUser));
+
+      console.log('✅ Demo mode activated:', demoUser.username);
+      onLoginSuccess(demoUser.id);
+    } catch (err) {
+      setError('Demo login failed');
+      console.error('❌ Demo login error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -155,6 +183,28 @@ export function Login({ onLoginSuccess }: LoginProps) {
           >
             {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}
           </button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">or try demo</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-2.5 rounded-lg font-medium transition-all disabled:opacity-50"
+          >
+            {isLoading ? 'Logging in...' : '🎯 Demo Login'}
+          </button>
+
+          <p className="text-center text-xs text-gray-500 mt-2">
+            Demo: demo@example.com / password123
+          </p>
         </form>
       </div>
     </div>
