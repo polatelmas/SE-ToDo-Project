@@ -6,7 +6,7 @@ import { Task } from '../services/api';
 interface TaskItemProps {
   task: Omit<Task, 'created_at' | 'updated_at'>;
   isCompleted: boolean;
-  onToggle: (taskId: string) => void;
+  onToggle: (taskId: number | string) => void;
   index: number;
 }
 
@@ -141,10 +141,10 @@ export function TaskItem({ task, isCompleted, onToggle, index }: TaskItemProps) 
             {/* Priority Badge - Dimmed when completed */}
             <div className={`flex-shrink-0 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all duration-200 ${
               isCompleted
-                ? task.priority === 'high'
+                ? task.priority === 'HIGH'
                   ? 'bg-red-50/50 text-red-400'
                   : 'bg-blue-50/50 text-blue-400'
-                : task.priority === 'high'
+                : task.priority === 'HIGH'
                 ? 'bg-red-50 text-red-600'
                 : 'bg-blue-50 text-[#0055FF]'
             }`}>
@@ -153,13 +153,23 @@ export function TaskItem({ task, isCompleted, onToggle, index }: TaskItemProps) 
             </div>
           </div>
 
-          {/* Time */}
-          <div className={`flex items-center gap-1.5 text-sm mb-2 transition-all duration-200 ${
-            isCompleted ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            <Clock className="h-3.5 w-3.5" />
-            <span>{task.time}</span>
-          </div>
+          {/* Time / Due Date */}
+          {task.due_date && (
+            <div className={`flex items-center gap-1.5 text-sm mb-2 transition-all duration-200 ${
+              isCompleted ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              <Clock className="h-3.5 w-3.5" />
+              <span>
+                {new Date(task.due_date).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+          )}
 
           {/* Description */}
           {task.description && (

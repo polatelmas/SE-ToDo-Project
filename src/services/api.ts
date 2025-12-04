@@ -20,7 +20,7 @@ export class ApiError extends Error {
 
 // ============= TYPES & INTERFACES =============
 
-// Event Types
+// Task/Event Types (unified task model from backend)
 export interface Event {
   id: number;
   user_id: number;
@@ -40,6 +40,9 @@ export interface Event {
   status?: 'PENDING' | 'COMPLETED' | 'CANCELLED';
   recurrence_type?: string | null;
 }
+
+// Task type alias for backward compatibility
+export type Task = Event;
 
 export interface CreateTaskPayload {
   title: string;
@@ -83,6 +86,7 @@ export interface CreateEventPayload {
   start_time: string;
   end_time: string;
   location: string;
+  description?: string | null;
   color_code: string;
 }
 
@@ -349,7 +353,13 @@ class ApiService {
 
   // Toggle task completion
   async toggleTask(id: number, userId: number): Promise<Task> {
-    return this.updateTask(id, userId, { status: 'COMPLETED' });
+    // Simple toggle: fetch task, check status, toggle and update
+    const tasks = await this.getTasks(userId);
+    const task = tasks.find(t => t.id === id);
+    if (!task) throw new ApiError(404, 'Task not found');
+    
+    const newStatusId = task.status_id === 1 ? 2 : 1; // 1=PENDING, 2=COMPLETED
+    return this.updateTask(id, userId, { status_id: newStatusId });
   }
 
   // ============= EVENTS METHODS =============
@@ -567,11 +577,11 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseURL}/notes/${id}`, {
+      const response = await fetch(`${this.baseUrl}/notes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...this.authService.getAuthHeader(),
+          ...authService.getAuthHeader(),
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
@@ -609,9 +619,9 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseURL}/notes/${id}`, {
+      const response = await fetch(`${this.baseUrl}/notes/${id}`, {
         method: 'DELETE',
-        headers: this.authService.getAuthHeader(),
+        headers: authService.getAuthHeader(),
         signal: controller.signal,
       });
 
@@ -647,11 +657,11 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseURL}/events/${id}`, {
+      const response = await fetch(`${this.baseUrl}/events/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...this.authService.getAuthHeader(),
+          ...authService.getAuthHeader(),
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
@@ -689,9 +699,9 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseURL}/events/${id}`, {
+      const response = await fetch(`${this.baseUrl}/events/${id}`, {
         method: 'DELETE',
-        headers: this.authService.getAuthHeader(),
+        headers: authService.getAuthHeader(),
         signal: controller.signal,
       });
 
@@ -727,11 +737,11 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseURL}/categories/${id}`, {
+      const response = await fetch(`${this.baseUrl}/categories/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...this.authService.getAuthHeader(),
+          ...authService.getAuthHeader(),
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
@@ -769,9 +779,9 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseURL}/categories/${id}`, {
+      const response = await fetch(`${this.baseUrl}/categories/${id}`, {
         method: 'DELETE',
-        headers: this.authService.getAuthHeader(),
+        headers: authService.getAuthHeader(),
         signal: controller.signal,
       });
 

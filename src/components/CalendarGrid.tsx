@@ -1,34 +1,35 @@
-import { StickyNote, Sparkles } from 'lucide-react';
+import { StickyNote, Sparkles, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { DayDetailCard } from './DayDetailCard';
-import { Task } from '../services/api';
+import { Task, Event } from '../services/api';
 
 interface DayData {
   date: number;
   isCurrentMonth: boolean;
   isToday: boolean;
   tasks: Task[];
+  events: Event[];
   hasNote: boolean;
 }
 
 interface CalendarGridProps {
   currentMonth: Date;
-  taskCompletions: { [key: string]: boolean };
-  onToggleTask: (taskId: string) => void;
+  taskCompletions: { [key: number]: boolean } | { [key: string]: boolean };
+  onToggleTask: (taskId: number | string) => void;
   recentlyCompleted: string | null;
   tasks?: Task[];
+  events?: Event[];
   onAddTaskClick?: () => void;
+  onAddEventClick?: () => void;
 }
 
-export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, recentlyCompleted, tasks = [], onAddTaskClick }: CalendarGridProps) {
-  const days = generateCalendarDays(currentMonth, taskCompletions, tasks);
+export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, recentlyCompleted, tasks = [], events = [], onAddTaskClick, onAddEventClick }: CalendarGridProps) {
+  const days = generateCalendarDays(currentMonth, taskCompletions, tasks, events);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const [selectedDay, setSelectedDay] = useState<{ day: number; tasks: Task[] } | null>(null);
+  const [selectedDay, setSelectedDay] = useState<{ day: number; tasks: Task[]; events: Event[] } | null>(null);
 
   const handleDayClick = (day: DayData) => {
-    if (day.isCurrentMonth && day.tasks.length > 0) {
-      setSelectedDay({ day: day.date, tasks: day.tasks });
-    }
+    setSelectedDay({ day: day.date, tasks: day.tasks, events: day.events });
   };
 
   const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -52,13 +53,13 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
             <button
               key={index}
               onClick={() => handleDayClick(day)}
-              disabled={!day.isCurrentMonth || day.tasks.length === 0}
+              disabled={!day.isCurrentMonth}
               className={`bg-white min-h-[120px] p-3 relative transition-all duration-200 text-left ${
-                !day.isCurrentMonth ? 'bg-gray-50' : ''
+                !day.isCurrentMonth ? 'bg-gray-50 cursor-default' : ''
               } ${
-                day.isCurrentMonth && day.tasks.length > 0
+                day.isCurrentMonth
                   ? 'cursor-pointer hover:shadow-lg hover:shadow-blue-500/20 hover:border-2 hover:border-blue-400 hover:-translate-y-0.5 hover:z-10 active:scale-[0.98]'
-                  : 'cursor-default'
+                  : ''
               }`}
               style={{
                 outline: 'none'
@@ -84,15 +85,15 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
 
               <div className="space-y-1.5">
                 {day.tasks.map((task) => {
-                  const isRecentlyCompleted = recentlyCompleted === task.id;
+                  const isRecentlyCompleted = recentlyCompleted === String(task.id);
                   
                   return (
                     <div
                       key={task.id}
                       className={`relative text-xs px-2 py-1 rounded truncate transition-all duration-300 ${
-                        task.priority === 'completed'
+                        task.status === 'COMPLETED'
                           ? 'bg-[#E6F4EA] text-[#1E7E34]'
-                          : task.priority === 'high'
+                          : task.priority === 'HIGH'
                           ? 'bg-red-100 text-red-700'
                           : 'bg-blue-100 text-blue-700'
                       }`}
@@ -104,9 +105,35 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
                         </div>
                       )}
                       
-                      <span className={task.priority === 'completed' ? 'line-through' : ''}>
+                      <span className={task.status === 'COMPLETED' ? 'line-through' : ''}>
                         {task.title}
                       </span>
+                    </div>
+                  );
+                })}
+
+                {day.events.map((event) => {
+                  // Extract time from start_time
+                  const startTime = new Date(event.start_time);
+                  const timeStr = startTime.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                  });
+                  
+                  return (
+                    <div
+                      key={event.id}
+                      className="relative text-xs px-2 py-1 rounded truncate transition-all duration-300 flex items-center gap-1"
+                      style={{
+                        backgroundColor: event.color_code + '20',
+                        color: event.color_code,
+                        borderLeft: `3px solid ${event.color_code}`
+                      }}
+                    >
+                      <Calendar className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{timeStr}</span>
+                      <span className="truncate flex-1 ml-0.5">{event.title}</span>
                     </div>
                   );
                 })}
@@ -123,9 +150,11 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
         day={selectedDay?.day || 0}
         month={monthName}
         tasks={selectedDay?.tasks || []}
+        events={selectedDay?.events || []}
         onToggleTask={onToggleTask}
         taskCompletions={taskCompletions}
         onAddTaskClick={onAddTaskClick}
+        onAddEventClick={onAddEventClick}
       />
     </>
   );
@@ -133,7 +162,7 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
 
 
 
-function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: string]: boolean }, apiTasks: Task[] = []): DayData[] {
+function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: string]: boolean }, apiTasks: Task[] = [], apiEvents: Event[] = []): DayData[] {
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   
@@ -160,6 +189,21 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
       tasksByDay[dayOfMonth].push(task);
     }
   });
+
+  // Group API events by day from their start_time field
+  const eventsByDay: { [key: number]: Event[] } = {};
+  
+  apiEvents.forEach(event => {
+    if (event.start_time) {
+      const eventDate = new Date(event.start_time);
+      const dayOfMonth = eventDate.getDate();
+      
+      if (!eventsByDay[dayOfMonth]) {
+        eventsByDay[dayOfMonth] = [];
+      }
+      eventsByDay[dayOfMonth].push(event);
+    }
+  });
   
   for (let i = 0; i < 42; i++) {
     const date = new Date(startDate);
@@ -172,17 +216,21 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
     // Get tasks for this day from API data only
     const dayTasks = tasksByDay[dayOfMonth] || [];
     
+    // Get events for this day from API data only
+    const dayEvents = eventsByDay[dayOfMonth] || [];
+    
     // Map tasks with completion state
     const tasksWithCompletion: Task[] = dayTasks.map(task => ({
       ...task,
-      priority: taskCompletions[task.id] ? 'completed' : task.priority
-    }));
+      status: taskCompletions?.[task.id as any] ? 'COMPLETED' : 'PENDING'
+    })) as Task[];
     
     days.push({
       date: dayOfMonth,
       isCurrentMonth,
       isToday,
       tasks: isCurrentMonth ? tasksWithCompletion : [],
+      events: isCurrentMonth ? dayEvents : [],
       hasNote: false // Note functionality can be added later
     });
   }

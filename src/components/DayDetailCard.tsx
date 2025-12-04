@@ -1,15 +1,7 @@
-import { X, Calendar as CalendarIcon } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TaskItem } from './TaskItem';
-
-interface Task {
-  id: string;
-  title: string;
-  time: string;
-  description: string;
-  priority: 'high' | 'low';
-  completed: boolean;
-}
+import { Event, Task } from '../services/api';
 
 interface DayDetailCardProps {
   isOpen: boolean;
@@ -17,12 +9,14 @@ interface DayDetailCardProps {
   day: number;
   month: string;
   tasks: Task[];
-  onToggleTask: (taskId: string) => void;
-  taskCompletions?: { [key: string]: boolean };
+  events?: Event[];
+  onToggleTask: (taskId: number | string) => void;
+  taskCompletions?: { [key: number]: boolean } | { [key: string]: boolean };
   onAddTaskClick?: () => void;
+  onAddEventClick?: () => void;
 }
 
-export function DayDetailCard({ isOpen, onClose, day, month, tasks, onToggleTask, taskCompletions = {}, onAddTaskClick }: DayDetailCardProps) {
+export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [], onToggleTask, taskCompletions = {}, onAddTaskClick, onAddEventClick }: DayDetailCardProps) {
 
   return (
     <AnimatePresence>
@@ -71,41 +65,82 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, onToggleTask
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-                <p className="text-white/90 text-sm">{tasks.length} {tasks.length === 1 ? 'task' : 'tasks'} scheduled</p>
+                <p className="text-white/90 text-sm mb-4">{tasks.length} {tasks.length === 1 ? 'task' : 'tasks'} {events.length > 0 && `+ ${events.length} event${events.length === 1 ? '' : 's'}`} scheduled</p>
+                
+                {/* Add buttons - Semi-transparent */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={onAddTaskClick}
+                    className="flex-1 py-2 px-3 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-lg transition-colors backdrop-blur-sm"
+                  >
+                    + Add Task
+                  </button>
+                  <button
+                    onClick={onAddEventClick}
+                    className="flex-1 py-2 px-3 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-lg transition-colors backdrop-blur-sm"
+                  >
+                    + Add Event
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Task List */}
             <div className="p-6 max-h-[500px] overflow-y-auto">
               <div className="space-y-3">
-                {tasks.map((task, index) => (
+                {tasks.map((task, index) => {
+                  const taskCompletion = taskCompletions as Record<string | number, boolean>;
+                  const isCompleted = taskCompletion?.[task.id] ?? (task.status === 'COMPLETED');
+                  return (
                   <TaskItem
                     key={task.id}
                     task={task}
-                    isCompleted={taskCompletions[task.id] ?? task.completed}
+                    isCompleted={isCompleted}
                     onToggle={onToggleTask}
                     index={index}
                   />
+                  );
+                })}
+
+                {/* Events List */}
+                {events.map((event, index) => (
+                  <div
+                    key={event.id}
+                    className="p-4 rounded-xl border transition-all duration-200 border-gray-200 bg-white"
+                    style={{
+                      borderLeftColor: event.color_code,
+                      borderLeftWidth: '4px'
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Calendar className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: event.color_code }} />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-gray-900 font-medium">{event.title}</h3>
+                        {event.location && (
+                          <p className="text-sm text-gray-500 mt-1">📍 {event.location}</p>
+                        )}
+                        <p className="text-sm text-gray-500 mt-1">
+                          {new Date(event.start_time).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })} - {new Date(event.end_time).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
 
               {/* Empty State */}
-              {tasks.length === 0 && (
+              {tasks.length === 0 && events.length === 0 && (
                 <div className="text-center py-12">
                   <CalendarIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No tasks scheduled for this day</p>
+                  <p className="text-gray-500">No tasks or events scheduled for this day</p>
                 </div>
               )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-              <button 
-                onClick={onAddTaskClick}
-                className="w-full py-2.5 px-4 bg-[#0055FF] hover:bg-[#0044CC] text-white rounded-lg transition-colors"
-              >
-                Add New Task
-              </button>
             </div>
           </motion.div>
         </>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Clock, StickyNote, Send, Bot, ChevronRight, Calendar, X } from 'lucide-react';
+import { Clock, StickyNote, Send, Bot, ChevronRight, Calendar, X, Plus, Edit2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { apiService } from '../services/api';
 import type { Note, Event } from '../services/api';
+import { AddNoteModal } from './AddNoteModal';
+import { AddEventModal } from './AddEventModal';
 
 interface SidebarProps {
   mode: 'notes' | 'events' | 'ai';
@@ -52,6 +54,7 @@ function NotesContent({ userId }: { userId: number }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
 
   useEffect(() => {
     if (!userId) {
@@ -89,80 +92,99 @@ function NotesContent({ userId }: { userId: number }) {
     }
   };
 
-  const upcomingTasks = [
-    { id: '1', title: 'Team Meeting', date: 'Today, 2:00 PM', priority: 'high' },
-    { id: '2', title: 'Review PRs', date: 'Today, 4:30 PM', priority: 'low' },
-    { id: '3', title: 'Client Call', date: 'Tomorrow, 10:00 AM', priority: 'high' },
-    { id: '4', title: 'Sprint Planning', date: 'Dec 12, 9:00 AM', priority: 'high' },
-    { id: '5', title: 'Weekly Review', date: 'Dec 24, 3:00 PM', priority: 'low' }
-  ];
-
-  const quickNotes = [
-    { id: '1', content: 'Remember to follow up with design team about the new landing page mockups', date: 'Nov 20' },
-    { id: '2', content: 'Check analytics dashboard for monthly metrics', date: 'Nov 18' },
-    { id: '3', content: 'Update project roadmap for Q1 2024', date: 'Nov 15' }
-  ];
+  const handleNoteAdded = (newNote: Note) => {
+    setNotes([newNote, ...notes]);
+  };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-8">
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="text-gray-500 text-sm">Loading notes...</div>
-        </div>
-      )}
+    <div className="h-full flex flex-col">
+      {/* Add Note Button - Always Visible */}
+      <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
+        <button
+          onClick={() => setIsAddNoteModalOpen(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          New Note
+        </button>
+      </div>
 
-      {/* Error State */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p className="text-red-700 text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && !error && notes.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">No notes yet</p>
-        </div>
-      )}
-
-      {/* Fetched Notes Section */}
-      {!isLoading && !error && notes.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <StickyNote className="h-4 w-4 text-gray-600" />
-            <h2 className="text-gray-900">My Notes</h2>
+      {/* Notes List - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-gray-500 text-sm">Loading notes...</div>
           </div>
-          
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !error && notes.length === 0 && (
+          <div className="text-center py-12">
+            <StickyNote className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-gray-500 text-sm">No notes yet</p>
+            <p className="text-gray-400 text-xs mt-1">Create your first note</p>
+          </div>
+        )}
+
+        {/* Notes List */}
+        {!isLoading && !error && notes.length > 0 && (
           <div className="space-y-3">
             {notes.map((note) => (
               <div
                 key={note.id}
-                className="p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow cursor-pointer group"
+                className="p-3 rounded-lg border border-gray-200 hover:shadow-md transition-all cursor-pointer group"
                 style={{ borderLeftColor: note.color_code || '#3b82f6', borderLeftWidth: '4px' }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-900 font-medium text-sm">{note.title}</p>
-                    <p className="text-gray-600 text-sm mt-1 leading-relaxed">{note.content}</p>
+                    <p className="text-gray-900 font-medium text-sm line-clamp-1">{note.title}</p>
+                    <p className="text-gray-600 text-xs mt-1 line-clamp-2">{note.content}</p>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteNote(note.id);
-                    }}
-                    disabled={deletingId === note.id}
-                    className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50 p-1"
-                    title="Delete note"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // TODO: Implement edit functionality
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 transition-all p-1"
+                      title="Edit note"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNote(note.id);
+                      }}
+                      disabled={deletingId === note.id}
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50 p-1"
+                      title="Delete note"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Add Note Modal */}
+      <AddNoteModal
+        isOpen={isAddNoteModalOpen}
+        onClose={() => setIsAddNoteModalOpen(false)}
+        onNoteAdded={handleNoteAdded}
+        userId={userId}
+      />
     </div>
   );
 }
@@ -301,6 +323,7 @@ function EventsContent({ userId }: { userId: number }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
 
   useEffect(() => {
     if (!userId) {
@@ -364,8 +387,25 @@ function EventsContent({ userId }: { userId: number }) {
     }
   };
 
+  const handleEventAdded = (newEvent: Event) => {
+    setEvents([newEvent, ...events]);
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-8">
+    <div className="h-full flex flex-col">
+      {/* Add Event Button - Always Visible */}
+      <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
+        <button
+          onClick={() => setIsAddEventModalOpen(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          New Event
+        </button>
+      </div>
+
+      {/* Events List - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-8">
@@ -427,6 +467,15 @@ function EventsContent({ userId }: { userId: number }) {
           </div>
         </div>
       )}
+      </div>
+
+      {/* Add Event Modal */}
+      <AddEventModal
+        isOpen={isAddEventModalOpen}
+        onClose={() => setIsAddEventModalOpen(false)}
+        onEventAdded={handleEventAdded}
+        userId={userId}
+      />
     </div>
   );
 }

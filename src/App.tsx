@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { CalendarGrid } from './components/CalendarGrid';
 import { Sidebar } from './components/Sidebar';
+import { TasksCompletionPanel } from './components/TasksCompletionPanel';
 import { AddTaskModal } from './components/AddTaskModal';
+import { AddEventModal } from './components/AddEventModal';
 import { Login } from './components/Login';
 import MobileApp from './MobileApp';
-import { apiService, Task } from './services/api';
+import { apiService, Task, Event } from './services/api';
 import { authService } from './services/auth';
 
 // Define task completion state type
@@ -19,12 +21,14 @@ export default function App() {
     return user?.id ?? null;
   });
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sidebarMode, setSidebarMode] = useState<'notes' | 'events' | 'ai'>('ai');
+  const [sidebarMode, setSidebarMode] = useState<'notes' | 'events' | 'ai'>('events');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Centralized task completion state (derived from tasks)
@@ -44,22 +48,25 @@ export default function App() {
       try {
         setIsLoading(true);
         const fetchedTasks = await apiService.getTasks(userId);
+        const fetchedEvents = await apiService.getEvents(userId);
         
         // Log fetched data to browser console
         console.log('Fetched tasks from API:', fetchedTasks);
+        console.log('Fetched events from API:', fetchedEvents);
         
         setTasks(fetchedTasks);
+        setEvents(fetchedEvents);
         
         // Initialize task completions from fetched data
         const completions: TaskCompletionState = {};
         fetchedTasks.forEach(task => {
-          completions[task.id] = task.completed;
+          completions[task.id] = task.status === 'COMPLETED';
         });
         setTaskCompletions(completions);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch tasks:', err);
-        setError('Failed to load tasks. Please try again.');
+        console.error('Failed to fetch tasks/events:', err);
+        setError('Failed to load tasks/events. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -68,37 +75,40 @@ export default function App() {
     fetchTasks();
   }, [userId]);
 
-  const toggleTaskCompletion = async (taskId: number) => {
+  const toggleTaskCompletion = async (taskId: number | string) => {
+    const numTaskId = typeof taskId === 'string' ? parseInt(taskId) : taskId;
+    if (!userId || isNaN(numTaskId)) return;
+
     try {
       // Capture current state BEFORE any updates
-      const currentState = taskCompletions[taskId];
+      const currentState = taskCompletions[numTaskId];
       const newState = !currentState;
       
       // Optimistic update
       setTaskCompletions(prev => ({
         ...prev,
-        [taskId]: newState,
+        [numTaskId]: newState,
       }));
 
       // If task is being completed (false -> true), trigger sparkle effect
       if (newState) {
-        setRecentlyCompleted(taskId);
+        setRecentlyCompleted(String(numTaskId));
         setTimeout(() => setRecentlyCompleted(null), 1000);
       }
 
       // Call API
-      await apiService.toggleTask(taskId, userId);
+      await apiService.toggleTask(numTaskId, userId);
       
       // Update tasks array
       setTasks(prev => 
         prev.map(task => 
-          task.id === taskId ? { ...task, completed: newState } : task
+          task.id === numTaskId ? { ...task, status: newState ? 'COMPLETED' : 'PENDING' } : task
         )
       );
     } catch (err) {
       console.error('Failed to toggle task:', err);
-      // Revert optimistic update using CAPTURED currentState
-      const currentState = taskCompletions[taskId];
+      // Revert optimistic update
+      const currentState = taskCompletions[numTaskId];
       const previousState = !currentState; // Inverse of current to get original
       setTaskCompletions(prev => ({
         ...prev,
@@ -155,11 +165,20 @@ export default function App() {
       
       const completions: TaskCompletionState = {};
       fetchedTasks.forEach(task => {
-        completions[task.id] = task.completed;
+        completions[task.id] = task.status === 'COMPLETED';
       });
       setTaskCompletions(completions);
     } catch (err) {
       console.error('Failed to refresh tasks:', err);
+    }
+  };
+
+  const handleEventAdded = async () => {
+    try {
+      const fetchedEvents = await apiService.getEvents(userId);
+      setEvents(fetchedEvents);
+    } catch (err) {
+      console.error('Failed to refresh events:', err);
     }
   };
 
@@ -209,10 +228,13 @@ export default function App() {
             onToggleTask={toggleTaskCompletion}
             recentlyCompleted={recentlyCompleted}
             tasks={tasks}
+            events={events}
             onAddTaskClick={() => setIsAddTaskModalOpen(true)}
+            onAddEventClick={() => setIsAddEventModalOpen(true)}
           />
         </div>
         
+        {/* Sidebar or Tasks Completion Panel */}
         {isSidebarOpen && (
           <div className="w-96 border-l border-gray-200 bg-white hidden lg:block">
             <Sidebar 
@@ -222,12 +244,28 @@ export default function App() {
             />
           </div>
         )}
+        
+        {!isSidebarOpen && (
+          <div className="border-l border-gray-200 bg-gray-50/30 p-4 hidden lg:block">
+            <TasksCompletionPanel 
+              userId={userId}
+              taskCompletions={taskCompletions}
+            />
+          </div>
+        )}
       </main>
 
       <AddTaskModal 
         isOpen={isAddTaskModalOpen}
         onClose={() => setIsAddTaskModalOpen(false)}
         onTaskAdded={handleTaskAdded}
+        userId={userId}
+      />
+
+      <AddEventModal
+        isOpen={isAddEventModalOpen}
+        onClose={() => setIsAddEventModalOpen(false)}
+        onEventAdded={handleEventAdded}
         userId={userId}
       />
     </div>
