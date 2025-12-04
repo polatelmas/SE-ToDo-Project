@@ -20,8 +20,8 @@ export class ApiError extends Error {
 
 // ============= TYPES & INTERFACES =============
 
-// Task/Event Types (unified task model from backend)
-export interface Event {
+// Task Types (from backend Todo/Task model)
+export interface Task {
   id: number;
   user_id: number;
   category_id: number | null;
@@ -40,9 +40,6 @@ export interface Event {
   status?: 'PENDING' | 'COMPLETED' | 'CANCELLED';
   recurrence_type?: string | null;
 }
-
-// Task type alias for backward compatibility
-export type Task = Event;
 
 export interface CreateTaskPayload {
   title: string;
@@ -68,15 +65,16 @@ export interface UpdateTaskPayload {
   color_code?: string;
 }
 
-// Event Types
+// Event Types (from backend Event model)
 export interface Event {
   id: number;
   user_id: number;
   title: string;
+  description?: string | null;
   start_time: string;
   end_time: string;
-  location: string;
-  color_code: string;
+  location?: string;
+  color_code?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -85,9 +83,9 @@ export interface CreateEventPayload {
   title: string;
   start_time: string;
   end_time: string;
-  location: string;
+  location?: string;
   description?: string | null;
-  color_code: string;
+  color_code?: string;
 }
 
 // Note Types
@@ -577,7 +575,7 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseUrl}/notes/${id}`, {
+      const response = await fetch(`${this.baseUrl}/notes/${id}?user_id=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -619,7 +617,7 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseUrl}/notes/${id}`, {
+      const response = await fetch(`${this.baseUrl}/notes/${id}?user_id=${userId}`, {
         method: 'DELETE',
         headers: authService.getAuthHeader(),
         signal: controller.signal,
@@ -657,7 +655,7 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseUrl}/events/${id}`, {
+      const response = await fetch(`${this.baseUrl}/events/${id}?user_id=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -699,7 +697,7 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseUrl}/events/${id}`, {
+      const response = await fetch(`${this.baseUrl}/events/${id}?user_id=${userId}`, {
         method: 'DELETE',
         headers: authService.getAuthHeader(),
         signal: controller.signal,
@@ -737,7 +735,7 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseUrl}/categories/${id}`, {
+      const response = await fetch(`${this.baseUrl}/categories/${id}?user_id=${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -779,7 +777,7 @@ class ApiService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${this.baseUrl}/categories/${id}`, {
+      const response = await fetch(`${this.baseUrl}/categories/${id}?user_id=${userId}`, {
         method: 'DELETE',
         headers: authService.getAuthHeader(),
         signal: controller.signal,
