@@ -87,16 +87,22 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
                 {day.tasks.map((task) => {
                   const isRecentlyCompleted = recentlyCompleted === String(task.id);
                   
+                  // Determine priority color - check both priority string and priority_id
+                  let priorityClass = 'bg-blue-100 text-blue-700'; // Default: LOW
+                  if (task.status === 'COMPLETED') {
+                    priorityClass = 'bg-[#E6F4EA] text-[#1E7E34]';
+                  } else if (task.priority === 'HIGH' || task.priority_id === 1) {
+                    priorityClass = 'bg-red-100 text-gray-900';
+                  } else if (task.priority === 'MEDIUM' || task.priority_id === 2) {
+                    priorityClass = 'bg-orange-100 text-gray-900';
+                  } else if (task.priority === 'LOW' || task.priority_id === 3) {
+                    priorityClass = 'bg-blue-100 text-gray-900';
+                  }
+                  
                   return (
                     <div
                       key={task.id}
-                      className={`relative text-xs px-2 py-1 rounded truncate transition-all duration-300 ${
-                        task.status === 'COMPLETED'
-                          ? 'bg-[#E6F4EA] text-[#1E7E34]'
-                          : task.priority === 'HIGH'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}
+                      className={`relative text-xs px-2 py-1 rounded truncate transition-all duration-300 ${priorityClass}`}
                     >
                       {/* Sparkle effect for recently completed */}
                       {isRecentlyCompleted && (
@@ -175,33 +181,30 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  // Group API tasks by day from their due_date field
-  const tasksByDay: { [key: number]: Task[] } = {};
+  // Group API tasks by YYYY-MM-DD date string
+  const tasksByDay: { [key: string]: Task[] } = {};
   
   apiTasks.forEach(task => {
     if (task.due_date) {
-      const taskDate = new Date(task.due_date);
-      const dayOfMonth = taskDate.getDate();
-      
-      if (!tasksByDay[dayOfMonth]) {
-        tasksByDay[dayOfMonth] = [];
+      const taskDateStr = task.due_date; // Assuming due_date is already YYYY-MM-DD format
+      if (!tasksByDay[taskDateStr]) {
+        tasksByDay[taskDateStr] = [];
       }
-      tasksByDay[dayOfMonth].push(task);
+      tasksByDay[taskDateStr].push(task);
     }
   });
 
-  // Group API events by day from their start_time field
-  const eventsByDay: { [key: number]: Event[] } = {};
+  // Group API events by YYYY-MM-DD date string from their start_time field
+  const eventsByDay: { [key: string]: Event[] } = {};
   
   apiEvents.forEach(event => {
     if (event.start_time) {
       const eventDate = new Date(event.start_time);
-      const dayOfMonth = eventDate.getDate();
-      
-      if (!eventsByDay[dayOfMonth]) {
-        eventsByDay[dayOfMonth] = [];
+      const dateStr = eventDate.toISOString().split('T')[0]; // Convert to YYYY-MM-DD
+      if (!eventsByDay[dateStr]) {
+        eventsByDay[dateStr] = [];
       }
-      eventsByDay[dayOfMonth].push(event);
+      eventsByDay[dateStr].push(event);
     }
   });
   
@@ -211,13 +214,16 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
     
     const dayOfMonth = date.getDate();
     const isCurrentMonth = date.getMonth() === month;
-    const isToday = date.getTime() === today.getTime();
+    const isToday = date.toISOString().split('T')[0] === today.toISOString().split('T')[0];
     
-    // Get tasks for this day from API data only
-    const dayTasks = tasksByDay[dayOfMonth] || [];
+    // Convert current date to YYYY-MM-DD format for comparison
+    const dateStr = date.toISOString().split('T')[0];
     
-    // Get events for this day from API data only
-    const dayEvents = eventsByDay[dayOfMonth] || [];
+    // Get tasks for this specific date (year-month-day)
+    const dayTasks = tasksByDay[dateStr] || [];
+    
+    // Get events for this specific date (year-month-day)
+    const dayEvents = eventsByDay[dateStr] || [];
     
     // Map tasks with completion state
     const tasksWithCompletion: Task[] = dayTasks.map(task => ({
