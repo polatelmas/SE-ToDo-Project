@@ -20,34 +20,6 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleDemoLogin = () => {
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      // Create mock demo user without backend
-      const demoUser = {
-        id: 999,
-        username: 'demo_user',
-        email: 'demo@example.com',
-      };
-
-      const demoToken = 'demo_token_' + Date.now();
-
-      // Store in localStorage (same as auth service does)
-      localStorage.setItem('auth_token', demoToken);
-      localStorage.setItem('auth_user', JSON.stringify(demoUser));
-
-      console.log('✅ Demo mode activated:', demoUser.username);
-      onLoginSuccess(demoUser.id);
-    } catch (err) {
-      setError('Demo login failed');
-      console.error('❌ Demo login error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -235,33 +207,6 @@ export function Login({ onLoginSuccess }: LoginProps) {
               {isLoading ? 'Loading...' : (isRegistering ? 'Create Account' : 'Sign In')}
             </motion.button>
           </form>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-2 bg-white text-gray-500 text-xs font-medium">or</span>
-            </div>
-          </div>
-
-          {/* Demo Login Button */}
-          <motion.button
-            type="button"
-            onClick={handleDemoLogin}
-            disabled={isLoading}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-bold transition-all disabled:opacity-50"
-          >
-            Try Demo
-          </motion.button>
-
-          {/* Footer Info */}
-          <p className="text-center text-xs text-gray-500 mt-4">
-            Demo credentials: demo@example.com / any password
-          </p>
         </div>
       </motion.div>
     </div>
