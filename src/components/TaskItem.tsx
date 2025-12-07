@@ -1,4 +1,4 @@
-import { Clock, Flag } from 'lucide-react';
+import { Clock, Flag, Edit2, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { Task } from '../services/api';
@@ -7,6 +7,8 @@ interface TaskItemProps {
   task: Omit<Task, 'created_at' | 'updated_at'>;
   isCompleted: boolean;
   onToggle: (taskId: number | string) => void;
+  onEdit?: (task: Task) => void;
+  onDelete?: (taskId: number) => void;
   index: number;
 }
 
@@ -22,7 +24,7 @@ interface TaskItemProps {
  * 3. Click target is the entire checkbox button (not just icon)
  * 4. Clear visual feedback for both states
  */
-export function TaskItem({ task, isCompleted, onToggle, index }: TaskItemProps) {
+export function TaskItem({ task, isCompleted, onToggle, onEdit, onDelete, index }: TaskItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
@@ -173,11 +175,43 @@ export function TaskItem({ task, isCompleted, onToggle, index }: TaskItemProps) 
 
           {/* Description */}
           {task.description && (
-            <p className={`text-sm transition-all duration-200 ${
+            <p className={`text-sm transition-all duration-200 mb-3 ${
               isCompleted ? 'text-gray-400' : 'text-gray-600'
             }`}>
               {task.description}
             </p>
+          )}
+
+          {/* Action Buttons */}
+          {isHovered && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex gap-2 mt-3 pt-3 border-t border-gray-200"
+            >
+              {onEdit && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onEdit(task as Task)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  Edit
+                </motion.button>
+              )}
+              {onDelete && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onDelete(task.id as number)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </motion.button>
+              )}
+            </motion.div>
           )}
         </div>
       </div>

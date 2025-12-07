@@ -4,6 +4,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { authService, RegisterPayload, LoginPayload } from '../services/auth';
 import { ApiError } from '../services/api';
+import { Mail, Lock, User, Calendar, CheckCircle2, ArrowRight } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface LoginProps {
   onLoginSuccess: (userId: number) => void;
@@ -93,120 +95,175 @@ export function Login({ onLoginSuccess }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
-          📋 TODO App
-        </h1>
-        <p className="text-center text-gray-600 mb-8">
-          {isRegistering ? 'Create your account' : 'Welcome back'}
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          {isRegistering && (
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Choose a username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={isLoading}
-                className="border-gray-200"
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              className="border-gray-200"
-            />
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-md"
+      >
+        {/* Card */}
+        <div className="bg-white rounded-3xl shadow-2xl p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-1">
+              ChronoTask
+            </h1>
+            <p className="text-gray-500 font-medium">Manage your time, organize your life</p>
           </div>
 
-          {isRegistering && (
-            <div className="space-y-2">
-              <Label htmlFor="birthDate">Birth Date</Label>
-              <Input
-                id="birthDate"
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                disabled={isLoading}
-                className="border-gray-200"
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              className="border-gray-200"
-            />
+          {/* Tab Navigation */}
+          <div className="flex gap-2 mb-8 bg-gray-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegistering(false);
+                setError(null);
+              }}
+              className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
+                !isRegistering
+                  ? 'bg-white text-blue-600 shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Sign In
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegistering(true);
+                setError(null);
+              }}
+              className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
+                isRegistering
+                  ? 'bg-white text-purple-600 shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Sign Up
+            </button>
           </div>
 
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium"
-          >
-            {isLoading ? 'Loading...' : isRegistering ? 'Create Account' : 'Login'}
-          </Button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium"
+              >
+                {error}
+              </motion.div>
+            )}
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegistering(!isRegistering);
-              setError(null);
-            }}
-            disabled={isLoading}
-            className="w-full text-center text-blue-600 hover:text-blue-700 font-medium py-2"
-          >
-            {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}
-          </button>
+            {/* Username Field - Register only */}
+            {isRegistering && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-2"
+              >
+                <label className="text-sm font-semibold text-gray-700">Username</label>
+                <Input
+                  type="text"
+                  placeholder="Choose a username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full border-2 border-gray-200 focus:border-purple-500 focus:outline-none rounded-lg px-4 py-2.5"
+                />
+              </motion.div>
+            )}
 
+            {/* Email Field */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Email Address</label>
+              <Input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                className="w-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none rounded-lg px-4 py-2.5"
+              />
+            </div>
+
+            {/* Birth Date - Register only */}
+            {isRegistering && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-2"
+              >
+                <label className="text-sm font-semibold text-gray-700">Birth Date</label>
+                <Input
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full border-2 border-gray-200 focus:border-purple-500 focus:outline-none rounded-lg px-4 py-2.5"
+                />
+              </motion.div>
+            )}
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700">Password</label>
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                className="w-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none rounded-lg px-4 py-2.5"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <motion.button
+              type="submit"
+              disabled={isLoading}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`w-full text-white py-3 rounded-lg font-bold text-lg transition-all disabled:opacity-50 mt-6 ${
+                isRegistering
+                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+                  : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+              }`}
+            >
+              {isLoading ? 'Loading...' : (isRegistering ? 'Create Account' : 'Sign In')}
+            </motion.button>
+          </form>
+
+          {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-gray-200" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">or try demo</span>
+            <div className="relative flex justify-center">
+              <span className="px-2 bg-white text-gray-500 text-xs font-medium">or</span>
             </div>
           </div>
 
-          <button
+          {/* Demo Login Button */}
+          <motion.button
             type="button"
             onClick={handleDemoLogin}
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-2.5 rounded-lg font-medium transition-all disabled:opacity-50"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-bold transition-all disabled:opacity-50"
           >
-            {isLoading ? 'Logging in...' : '🎯 Demo Login'}
-          </button>
+            Try Demo
+          </motion.button>
 
-          <p className="text-center text-xs text-gray-500 mt-2">
-            Demo: demo@example.com / password123
+          {/* Footer Info */}
+          <p className="text-center text-xs text-gray-500 mt-4">
+            Demo credentials: demo@example.com / any password
           </p>
-        </form>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }

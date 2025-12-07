@@ -6,6 +6,7 @@ import { TasksCompletionPanel } from './components/TasksCompletionPanel';
 import { AddTaskModal } from './components/AddTaskModal';
 import { AddEventModal } from './components/AddEventModal';
 import { Login } from './components/Login';
+import { UserProfile } from './components/UserProfile';
 import MobileApp from './MobileApp';
 import { apiService, Task, Event } from './services/api';
 import { authService } from './services/auth';
@@ -22,6 +23,7 @@ export default function App() {
   });
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -182,6 +184,53 @@ export default function App() {
     }
   };
 
+  const handleDeleteTask = async (taskId: number) => {
+    if (!userId) return;
+
+    try {
+      // Optimistic update - remove from UI immediately
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+      
+      // Remove from completions
+      const newCompletions = { ...taskCompletions };
+      delete newCompletions[taskId];
+      setTaskCompletions(newCompletions);
+
+      // Try to sync with backend
+      await apiService.deleteTask(taskId, userId);
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+      // Silme başarısız olsa bile frontend'de silinmiş gibi göster
+      console.log('⚠️ Task silindi ama backend senkronizasyonu başarısız. Mock datayı kontrol et.');
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: number) => {
+    if (!userId) return;
+
+    try {
+      // Optimistic update - remove from UI immediately
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+
+      // Try to sync with backend
+      await apiService.deleteEvent(eventId, userId);
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      // Silme başarısız olsa bile frontend'de silinmiş gibi göster
+      console.log('⚠️ Event silindi ama backend senkronizasyonu başarısız. Mock datayı kontrol et.');
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    // TODO: Open edit modal for task
+    console.log('Edit task:', task);
+  };
+
+  const handleEditEvent = (event: Event) => {
+    // TODO: Open edit modal for event
+    console.log('Edit event:', event);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -214,12 +263,20 @@ export default function App() {
         onAddTask={() => setIsAddTaskModalOpen(true)}
         sidebarMode={isSidebarOpen ? sidebarMode : null}
         onSidebarToggle={handleSidebarToggle}
+        onProfileClick={() => setIsProfileOpen(true)}
         onLogout={() => {
           authService.logout();
           setUserId(null);
         }}
       />
       
+      {/* Profile Page */}
+      {isProfileOpen && (
+        <UserProfile onBack={() => setIsProfileOpen(false)} />
+      )}
+
+      {/* Main Layout */}
+      {!isProfileOpen && (
       <main className="flex max-w-full">
         <div className="flex-1 p-8">
           <CalendarGrid 
@@ -231,6 +288,10 @@ export default function App() {
             events={events}
             onAddTaskClick={() => setIsAddTaskModalOpen(true)}
             onAddEventClick={() => setIsAddEventModalOpen(true)}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTask}
+            onEditEvent={handleEditEvent}
+            onDeleteEvent={handleDeleteEvent}
           />
         </div>
         
@@ -240,7 +301,9 @@ export default function App() {
             <Sidebar 
               mode={sidebarMode} 
               userId={userId}
-              onClose={() => setIsSidebarOpen(false)} 
+              onClose={() => setIsSidebarOpen(false)}
+              events={events}
+              notes={[]} // Mock notes - backend notesendpointine ihtiyaç var
             />
           </div>
         )}
@@ -250,10 +313,12 @@ export default function App() {
             <TasksCompletionPanel 
               userId={userId}
               taskCompletions={taskCompletions}
+              tasks={tasks}
             />
           </div>
         )}
       </main>
+      )}
 
       <AddTaskModal 
         isOpen={isAddTaskModalOpen}

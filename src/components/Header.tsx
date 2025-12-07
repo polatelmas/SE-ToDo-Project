@@ -1,6 +1,9 @@
-import { Search, ChevronLeft, ChevronRight, Plus, StickyNote, Calendar, Sparkles, LogOut } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Plus, StickyNote, Calendar, Sparkles, LogOut, User, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { authService } from '../services/auth';
 
 interface HeaderProps {
   currentMonth: Date;
@@ -10,10 +13,24 @@ interface HeaderProps {
   sidebarMode: 'notes' | 'events' | 'ai' | null;
   onSidebarToggle: (mode: 'notes' | 'events' | 'ai') => void;
   onLogout?: () => void;
+  onProfileClick?: () => void;
 }
 
-export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, sidebarMode, onSidebarToggle, onLogout }: HeaderProps) {
+export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, sidebarMode, onSidebarToggle, onLogout, onProfileClick }: HeaderProps) {
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  
+  const user = authService.getCurrentUser();
+
+  const handleLogout = () => {
+    setIsProfileOpen(false);
+    onLogout?.();
+  };
+
+  const handleProfileClick = () => {
+    setIsProfileOpen(false);
+    onProfileClick?.();
+  };
 
   return (
     <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -101,19 +118,60 @@ export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, 
             <span className="hidden sm:inline">Add Task</span>
           </Button>
 
-          <Avatar className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0">
+          <Avatar className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity relative"
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+          >
             <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarFallback>{user?.username?.charAt(0).toUpperCase() || 'JD'}</AvatarFallback>
           </Avatar>
 
-          {onLogout && (
-            <button
-              onClick={onLogout}
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-md flex items-center justify-center transition-all flex-shrink-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
+          {/* Profile Dropdown */}
+          <AnimatePresence>
+            {isProfileOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute top-16 right-4 bg-white rounded-lg shadow-xl border border-gray-200 w-56 z-50"
+              >
+                {/* User Info */}
+                <div className="px-4 py-3 border-b border-gray-200">
+                  <p className="font-semibold text-gray-900 text-sm">{user?.username || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
+                </div>
+
+                {/* Menu Items */}
+                <div className="py-2">
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                  >
+                    <User className="h-4 w-4 text-blue-600" />
+                    My Profile
+                  </button>
+                </div>
+
+                {/* Logout */}
+                <div className="border-t border-gray-200 py-2">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 transition-colors font-medium"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Backdrop to close dropdown */}
+          {isProfileOpen && (
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setIsProfileOpen(false)}
+            />
           )}
         </div>
       </div>

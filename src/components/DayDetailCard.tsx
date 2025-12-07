@@ -1,4 +1,4 @@
-import { X, Calendar as CalendarIcon, Calendar } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Calendar, Plus, Clock, Edit2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TaskItem } from './TaskItem';
 import { Event, Task } from '../services/api';
@@ -14,9 +14,13 @@ interface DayDetailCardProps {
   taskCompletions?: { [key: number]: boolean } | { [key: string]: boolean };
   onAddTaskClick?: () => void;
   onAddEventClick?: () => void;
+  onEditTask?: (task: Task) => void;
+  onDeleteTask?: (taskId: number) => void;
+  onEditEvent?: (event: Event) => void;
+  onDeleteEvent?: (eventId: number) => void;
 }
 
-export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [], onToggleTask, taskCompletions = {}, onAddTaskClick, onAddEventClick }: DayDetailCardProps) {
+export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [], onToggleTask, taskCompletions = {}, onAddTaskClick, onAddEventClick, onEditTask, onDeleteTask, onEditEvent, onDeleteEvent }: DayDetailCardProps) {
 
   return (
     <AnimatePresence>
@@ -69,18 +73,24 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
                 
                 {/* Add buttons - Semi-transparent */}
                 <div className="flex gap-2">
-                  <button
+                  <motion.button
                     onClick={onAddTaskClick}
-                    className="flex-1 py-2 px-3 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-lg transition-colors backdrop-blur-sm"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 py-2 px-3 bg-white/20 text-white text-sm font-medium rounded-lg transition-all duration-200 backdrop-blur-sm flex items-center justify-center gap-2 group"
                   >
-                    + Add Task
-                  </button>
-                  <button
+                    <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                    <span>Add Task</span>
+                  </motion.button>
+                  <motion.button
                     onClick={onAddEventClick}
-                    className="flex-1 py-2 px-3 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-lg transition-colors backdrop-blur-sm"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 py-2 px-3 bg-white/20 text-white text-sm font-medium rounded-lg transition-all duration-200 backdrop-blur-sm flex items-center justify-center gap-2 group"
                   >
-                    + Add Event
-                  </button>
+                    <Clock className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                    <span>Add Event</span>
+                  </motion.button>
                 </div>
               </div>
             </div>
@@ -97,6 +107,8 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
                     task={task}
                     isCompleted={isCompleted}
                     onToggle={onToggleTask}
+                    onEdit={onEditTask}
+                    onDelete={onDeleteTask}
                     index={index}
                   />
                   );
@@ -104,33 +116,60 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
 
                 {/* Events List */}
                 {events.map((event, index) => (
-                  <div
+                  <motion.div
                     key={event.id}
-                    className="p-4 rounded-xl border transition-all duration-200 border-gray-200 bg-white"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-4 rounded-xl border transition-all duration-200 border-gray-200 bg-white hover:shadow-md group"
                     style={{
                       borderLeftColor: event.color_code,
                       borderLeftWidth: '4px'
                     }}
                   >
-                    <div className="flex items-start gap-3">
-                      <Calendar className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: event.color_code }} />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-gray-900 font-medium">{event.title}</h3>
-                        {event.location && (
-                          <p className="text-sm text-gray-500 mt-1">📍 {event.location}</p>
-                        )}
-                        <p className="text-sm text-gray-500 mt-1">
-                          {new Date(event.start_time).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })} - {new Date(event.end_time).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                    <div className="flex items-start gap-3 justify-between">
+                      <div className="flex items-start gap-3 flex-1">
+                        <Calendar className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: event.color_code }} />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-gray-900 font-medium">{event.title}</h3>
+                          {event.location && (
+                            <p className="text-sm text-gray-500 mt-1">📍 {event.location}</p>
+                          )}
+                          <p className="text-sm text-gray-500 mt-1">
+                            {new Date(event.start_time).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })} - {new Date(event.end_time).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => onEditEvent?.(event)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit event"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => onDeleteEvent?.(event.id as number)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete event"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </motion.button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 

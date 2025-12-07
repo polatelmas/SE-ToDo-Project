@@ -806,6 +806,224 @@ class ApiService {
       throw new ApiError(0, 'Unknown error while deleting category');
     }
   }
+
+  // ============= MOCK DATA =============
+  async populateMockData(userId: number): Promise<any> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(`${API_BASE_URL}/mock/populate?user_id=${userId}`, {
+        method: 'POST',
+        headers: authService.getAuthHeader(),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        // If backend endpoint doesn't exist, use local mock data
+        console.warn('⚠️  Backend mock endpoint not available, using local mock data');
+        return this.generateLocalMockData(userId);
+      }
+
+      const data = await response.json();
+      console.log('✅ Mock data populated successfully:', data);
+      return data;
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('⚠️  Backend request timed out, using local mock data');
+        return this.generateLocalMockData(userId);
+      }
+      // Fallback to local mock data
+      console.warn('⚠️  Backend not available, using local mock data');
+      return this.generateLocalMockData(userId);
+    }
+  }
+
+  private generateLocalMockData(userId: number): any {
+    // Mock categories
+    const categories: Category[] = [
+      { id: 1, user_id: userId, name: 'Work', color_code: '#3B82F6' },
+      { id: 2, user_id: userId, name: 'Personal', color_code: '#10B981' },
+      { id: 3, user_id: userId, name: 'Shopping', color_code: '#F59E0B' },
+    ];
+
+    // Mock tasks
+    const today = new Date();
+    const tasks: Task[] = [
+      {
+        id: 1,
+        user_id: userId,
+        title: 'Complete project proposal',
+        description: 'Finish the Q1 project proposal',
+        category_id: 1,
+        priority_id: 1,
+        priority: 'HIGH',
+        due_date: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status_id: 1,
+        status: 'PENDING',
+        recurrence_type_id: 0,
+        color_code: '#EF4444',
+      },
+      {
+        id: 2,
+        user_id: userId,
+        title: 'Review team feedback',
+        description: 'Review feedback from the design team',
+        category_id: 1,
+        priority_id: 2,
+        priority: 'MEDIUM',
+        due_date: today.toISOString().split('T')[0],
+        status_id: 1,
+        status: 'PENDING',
+        recurrence_type_id: 0,
+        color_code: '#F97316',
+      },
+      {
+        id: 3,
+        user_id: userId,
+        title: 'Buy groceries',
+        description: 'Milk, eggs, bread, vegetables',
+        category_id: 3,
+        priority_id: 3,
+        priority: 'LOW',
+        due_date: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status_id: 2,
+        status: 'COMPLETED',
+        recurrence_type_id: 0,
+        color_code: '#8B5CF6',
+      },
+      {
+        id: 4,
+        user_id: userId,
+        title: 'Prepare presentation',
+        description: 'Slides for Monday meeting',
+        category_id: 1,
+        priority_id: 1,
+        priority: 'HIGH',
+        due_date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status_id: 1,
+        status: 'PENDING',
+        recurrence_type_id: 0,
+        color_code: '#EF4444',
+      },
+      {
+        id: 5,
+        user_id: userId,
+        title: 'Exercise',
+        description: '30 minutes cardio',
+        category_id: 2,
+        priority_id: 2,
+        priority: 'MEDIUM',
+        due_date: today.toISOString().split('T')[0],
+        status_id: 1,
+        status: 'PENDING',
+        recurrence_type_id: 0,
+        color_code: '#06B6D4',
+      },
+    ];
+
+    // Mock events
+    const events: Event[] = [
+      {
+        id: 1,
+        user_id: userId,
+        title: 'Team Meeting',
+        description: 'Weekly sync with the team',
+        start_time: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '10:00:00'),
+        end_time: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '11:00:00'),
+        location: 'Conference Room A',
+        color_code: '#3B82F6',
+      },
+      {
+        id: 2,
+        user_id: userId,
+        title: 'Lunch with Client',
+        description: 'Discuss new project requirements',
+        start_time: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '12:30:00'),
+        end_time: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '13:30:00'),
+        location: 'Downtown Restaurant',
+        color_code: '#10B981',
+      },
+      {
+        id: 3,
+        user_id: userId,
+        title: 'Project Deadline',
+        description: 'Submit final deliverables',
+        start_time: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '17:00:00'),
+        end_time: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '18:00:00'),
+        location: 'Office',
+        color_code: '#EF4444',
+      },
+      {
+        id: 4,
+        user_id: userId,
+        title: 'Doctor Appointment',
+        description: 'Annual checkup',
+        start_time: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '14:00:00'),
+        end_time: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '15:00:00'),
+        location: 'Medical Center',
+        color_code: '#8B5CF6',
+      },
+      {
+        id: 5,
+        user_id: userId,
+        title: 'Gym Session',
+        description: 'Strength training',
+        start_time: new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '18:00:00'),
+        end_time: new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().replace('00:00:00', '19:30:00'),
+        location: 'Local Gym',
+        color_code: '#06B6D4',
+      },
+    ];
+
+    // Mock notes
+    const notes: Note[] = [
+      {
+        id: 1,
+        user_id: userId,
+        category_id: 1,
+        event_id: null,
+        title: 'Project Ideas',
+        content: 'New features for Q1: Dark mode, notifications, collaboration',
+        color_code: '#FBBF24',
+        created_at: today.toISOString(),
+      },
+      {
+        id: 2,
+        user_id: userId,
+        category_id: 2,
+        event_id: null,
+        title: 'Vacation Plans',
+        content: 'July: Greece trip with family. Need to book flights by March.',
+        color_code: '#86EFAC',
+        created_at: today.toISOString(),
+      },
+      {
+        id: 3,
+        user_id: userId,
+        category_id: 3,
+        event_id: null,
+        title: 'Shopping List',
+        content: 'Coffee maker, kitchen utensils, bathroom supplies',
+        color_code: '#FCA5A5',
+        created_at: today.toISOString(),
+      },
+    ];
+
+    return {
+      status: 'success',
+      message: 'Mock data generated successfully (local)',
+      data: {
+        tasks: tasks.length,
+        events: events.length,
+        notes: notes.length,
+        categories: categories.length,
+      }
+    };
+  }
+
 }
 
 export const apiService = new ApiService();

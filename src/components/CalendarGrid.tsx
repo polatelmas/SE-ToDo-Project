@@ -5,6 +5,7 @@ import { Task, Event } from '../services/api';
 
 interface DayData {
   date: number;
+  dateStr: string; // YYYY-MM-DD format for task filtering
   isCurrentMonth: boolean;
   isToday: boolean;
   tasks: Task[];
@@ -21,15 +22,19 @@ interface CalendarGridProps {
   events?: Event[];
   onAddTaskClick?: () => void;
   onAddEventClick?: () => void;
+  onEditTask?: (task: Task) => void;
+  onDeleteTask?: (taskId: number) => void;
+  onEditEvent?: (event: Event) => void;
+  onDeleteEvent?: (eventId: number) => void;
 }
 
-export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, recentlyCompleted, tasks = [], events = [], onAddTaskClick, onAddEventClick }: CalendarGridProps) {
+export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, recentlyCompleted, tasks = [], events = [], onAddTaskClick, onAddEventClick, onEditTask, onDeleteTask, onEditEvent, onDeleteEvent }: CalendarGridProps) {
   const days = generateCalendarDays(currentMonth, taskCompletions, tasks, events);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const [selectedDay, setSelectedDay] = useState<{ day: number; tasks: Task[]; events: Event[] } | null>(null);
+  const [selectedDay, setSelectedDay] = useState<{ day: number; dateStr: string; tasks: Task[]; events: Event[] } | null>(null);
 
   const handleDayClick = (day: DayData) => {
-    setSelectedDay({ day: day.date, tasks: day.tasks, events: day.events });
+    setSelectedDay({ day: day.date, dateStr: day.dateStr, tasks: day.tasks, events: day.events });
   };
 
   const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -161,6 +166,10 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
         taskCompletions={taskCompletions}
         onAddTaskClick={onAddTaskClick}
         onAddEventClick={onAddEventClick}
+        onEditTask={onEditTask}
+        onDeleteTask={onDeleteTask}
+        onEditEvent={onEditEvent}
+        onDeleteEvent={onDeleteEvent}
       />
     </>
   );
@@ -200,7 +209,12 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
   apiEvents.forEach(event => {
     if (event.start_time) {
       const eventDate = new Date(event.start_time);
-      const dateStr = eventDate.toISOString().split('T')[0]; // Convert to YYYY-MM-DD
+      // Use local date instead of ISO
+      const year = eventDate.getFullYear();
+      const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+      const day = String(eventDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
       if (!eventsByDay[dateStr]) {
         eventsByDay[dateStr] = [];
       }
@@ -214,10 +228,19 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
     
     const dayOfMonth = date.getDate();
     const isCurrentMonth = date.getMonth() === month;
-    const isToday = date.toISOString().split('T')[0] === today.toISOString().split('T')[0];
     
-    // Convert current date to YYYY-MM-DD format for comparison
-    const dateStr = date.toISOString().split('T')[0];
+    // Use local date instead of ISO (which uses UTC)
+    const year = date.getFullYear();
+    const month_num = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month_num}-${day}`;
+    
+    // Also use local date for today comparison
+    const today_year = today.getFullYear();
+    const today_month = String(today.getMonth() + 1).padStart(2, '0');
+    const today_day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${today_year}-${today_month}-${today_day}`;
+    const isToday = dateStr === todayStr;
     
     // Get tasks for this specific date (year-month-day)
     const dayTasks = tasksByDay[dateStr] || [];
@@ -233,6 +256,7 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
     
     days.push({
       date: dayOfMonth,
+      dateStr: dateStr,
       isCurrentMonth,
       isToday,
       tasks: isCurrentMonth ? tasksWithCompletion : [],

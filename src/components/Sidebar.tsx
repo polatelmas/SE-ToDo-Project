@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, StickyNote, Send, Bot, ChevronRight, Calendar, X, Plus, Edit2 } from 'lucide-react';
+import { Clock, StickyNote, Send, Bot, ChevronRight, Calendar, X, Plus, Edit2, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { apiService } from '../services/api';
 import type { Note, Event } from '../services/api';
@@ -10,6 +10,8 @@ interface SidebarProps {
   mode: 'notes' | 'events' | 'ai';
   onClose: () => void;
   userId: number;
+  events?: Event[];
+  notes?: Note[];
 }
 
 interface Message {
@@ -19,7 +21,7 @@ interface Message {
   timestamp: Date;
 }
 
-export function Sidebar({ mode, onClose, userId }: SidebarProps) {
+export function Sidebar({ mode, onClose, userId, events = [], notes = [] }: SidebarProps) {
   return (
     <div className="h-full flex flex-col bg-blue-50/30 overflow-hidden">
       {/* Sidebar Header with Close Button */}
@@ -41,22 +43,29 @@ export function Sidebar({ mode, onClose, userId }: SidebarProps) {
 
       {/* Content Area - Scrollable */}
       <div className="flex-1 overflow-y-auto">
-        {mode === 'notes' && <NotesContent userId={userId} />}
-        {mode === 'events' && <EventsContent userId={userId} />}
+        {mode === 'notes' && <NotesContent userId={userId} notes={notes} />}
+        {mode === 'events' && <EventsContent userId={userId} events={events} />}
         {mode === 'ai' && <AIContent />}
       </div>
     </div>
   );
 }
 
-function NotesContent({ userId }: { userId: number }) {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+function NotesContent({ userId, notes: propNotes = [] }: { userId: number; notes?: Note[] }) {
+  const [notes, setNotes] = useState<Note[]>(propNotes);
+  const [isLoading, setIsLoading] = useState(!propNotes || propNotes.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
 
   useEffect(() => {
+    // If notes come from props, use them directly
+    if (propNotes && propNotes.length > 0) {
+      setNotes(propNotes);
+      setIsLoading(false);
+      return;
+    }
+
     if (!userId) {
       setIsLoading(false);
       return;
@@ -77,7 +86,7 @@ function NotesContent({ userId }: { userId: number }) {
     };
 
     fetchNotes();
-  }, [userId]);
+  }, [userId, propNotes]);
 
   const handleDeleteNote = async (noteId: number) => {
     try {
@@ -154,7 +163,7 @@ function NotesContent({ userId }: { userId: number }) {
                         e.stopPropagation();
                         // TODO: Implement edit functionality
                       }}
-                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 transition-all p-1"
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 transition-all p-1 rounded hover:bg-blue-50"
                       title="Edit note"
                     >
                       <Edit2 className="h-3.5 w-3.5" />
@@ -165,10 +174,10 @@ function NotesContent({ userId }: { userId: number }) {
                         handleDeleteNote(note.id);
                       }}
                       disabled={deletingId === note.id}
-                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50 p-1"
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50 p-1 rounded hover:bg-red-50"
                       title="Delete note"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
@@ -318,14 +327,21 @@ function AIContent() {
   );
 }
 
-function EventsContent({ userId }: { userId: number }) {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+function EventsContent({ userId, events: propEvents = [] }: { userId: number; events?: Event[] }) {
+  const [events, setEvents] = useState<Event[]>(propEvents);
+  const [isLoading, setIsLoading] = useState(!propEvents || propEvents.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
 
   useEffect(() => {
+    // If events come from props, use them directly
+    if (propEvents && propEvents.length > 0) {
+      setEvents(propEvents);
+      setIsLoading(false);
+      return;
+    }
+
     if (!userId) {
       setIsLoading(false);
       return;
@@ -346,7 +362,7 @@ function EventsContent({ userId }: { userId: number }) {
     };
 
     fetchEvents();
-  }, [userId]);
+  }, [userId, propEvents]);
 
   const handleDeleteEvent = async (eventId: number) => {
     try {
@@ -450,17 +466,29 @@ function EventsContent({ userId }: { userId: number }) {
                       <p className="text-gray-500 text-sm mt-2 leading-relaxed">{event.description}</p>
                     )}
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteEvent(event.id);
-                    }}
-                    disabled={deletingId === event.id}
-                    className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50 p-1"
-                    title="Delete event"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // TODO: Implement edit functionality
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 transition-all p-1 rounded hover:bg-blue-50"
+                      title="Edit event"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteEvent(event.id);
+                      }}
+                      disabled={deletingId === event.id}
+                      className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-gray-400 hover:text-red-600 transition-all disabled:opacity-50 p-1 rounded hover:bg-red-50"
+                      title="Delete event"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
