@@ -5,6 +5,7 @@ import { apiService } from '../services/api';
 import type { Note, Event } from '../services/api';
 import { AddNoteModal } from './AddNoteModal';
 import { AddEventModal } from './AddEventModal';
+import { useTheme } from '../context/ThemeContext';
 
 interface SidebarProps {
   mode: 'notes' | 'events' | 'ai';
@@ -22,19 +23,21 @@ interface Message {
 }
 
 export function Sidebar({ mode, onClose, userId, events = [], notes = [] }: SidebarProps) {
+  const { theme } = useTheme();
+  
   return (
-    <div className="h-full flex flex-col bg-blue-50/30 overflow-hidden">
+    <div className={`h-full flex flex-col overflow-hidden transition-colors ${theme === 'dark' ? 'bg-gray-900' : 'bg-blue-50/30'}`}>
       {/* Sidebar Header with Close Button */}
-      <div className="p-4 border-b border-blue-200 bg-white flex items-center justify-between flex-shrink-0">
+      <div className={`p-4 border-b flex items-center justify-between flex-shrink-0 transition-colors ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-blue-200'}`}>
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 bg-blue-600 rounded-full" />
-          <h3 className="text-gray-900">
+          <h3 className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
             {mode === 'notes' ? 'Notes' : mode === 'events' ? 'Events' : 'AI Copilot'}
           </h3>
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
+          className={`transition-colors p-1 rounded ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
           title="Collapse Panel"
         >
           <ChevronRight className="h-5 w-5" />

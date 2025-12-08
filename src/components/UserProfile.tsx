@@ -1,7 +1,8 @@
 import { motion } from 'motion/react';
-import { ArrowLeft, Mail, Calendar, User, Edit2, Save, Lock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, User, Edit2, Save, Lock, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
 import { authService } from '../services/auth';
+import { useTheme } from '../context/ThemeContext';
 
 interface UserProfileProps {
   onBack: () => void;
@@ -9,6 +10,7 @@ interface UserProfileProps {
 
 export function UserProfile({ onBack }: UserProfileProps) {
   const user = authService.getCurrentUser();
+  const { theme, toggleTheme } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
@@ -68,17 +70,21 @@ export function UserProfile({ onBack }: UserProfileProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className={`min-h-screen transition-colors ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+        : 'bg-gradient-to-br from-gray-50 to-gray-100'
+    }`}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b sticky top-0 z-10 transition-colors`}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
           <button
             onClick={onBack}
-            className="h-10 w-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+            className={`h-10 w-10 rounded-lg ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} flex items-center justify-center transition-colors`}
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+          <h1 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>My Profile</h1>
         </div>
       </div>
 
@@ -87,10 +93,10 @@ export function UserProfile({ onBack }: UserProfileProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white rounded-2xl shadow-lg p-8"
+          className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} rounded-2xl shadow-lg p-8 transition-colors`}
         >
           {/* Profile Avatar & Header */}
-          <div className="flex items-start justify-between mb-8 pb-8 border-b border-gray-200">
+          <div className={`flex items-start justify-between mb-8 pb-8 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="flex items-center gap-4">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
                 <span className="text-4xl font-bold text-white">
@@ -353,18 +359,44 @@ export function UserProfile({ onBack }: UserProfileProps) {
           </div>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-gray-200">
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600 mb-1">0</div>
-              <p className="text-gray-600 text-sm">Tasks Completed</p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Tasks Completed</p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-600 mb-1">0</div>
-              <p className="text-gray-600 text-sm">Active Tasks</p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Active Tasks</p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600 mb-1">0%</div>
-              <p className="text-gray-600 text-sm">Completion Rate</p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Completion Rate</p>
+            </div>
+          </div>
+
+          {/* Theme Toggle Section */}
+          <div className={`mt-8 pt-8 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className="flex items-center justify-between">
+              <h3 className={`text-lg font-bold flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                {theme === 'dark' ? (
+                  <Moon className="h-5 w-5 text-yellow-400" />
+                ) : (
+                  <Sun className="h-5 w-5 text-blue-600" />
+                )}
+                Theme
+              </h3>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleTheme}
+                className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm ${
+                  theme === 'dark'
+                    ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+              </motion.button>
             </div>
           </div>
         </motion.div>

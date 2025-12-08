@@ -2,6 +2,7 @@ import { X, Calendar as CalendarIcon, Calendar, Plus, Clock, Edit2, Trash2 } fro
 import { motion, AnimatePresence } from 'motion/react';
 import { TaskItem } from './TaskItem';
 import { Event, Task } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 interface DayDetailCardProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface DayDetailCardProps {
 }
 
 export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [], onToggleTask, taskCompletions = {}, onAddTaskClick, onAddEventClick, onEditTask, onDeleteTask, onEditEvent, onDeleteEvent }: DayDetailCardProps) {
+  const { theme } = useTheme();
 
   return (
     <AnimatePresence>
@@ -45,7 +47,7 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
               duration: 0.3, 
               ease: [0.34, 1.56, 0.64, 1] // Bouncy easing
             }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden"
+            className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg mx-4 rounded-2xl shadow-2xl z-50 overflow-hidden transition-colors ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
           >
             {/* Header - Bright Blue #0055FF */}
             <div className="bg-[#0055FF] px-6 py-5 text-white relative overflow-hidden">
@@ -96,7 +98,7 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
             </div>
 
             {/* Task List */}
-            <div className="p-6 max-h-[500px] overflow-y-auto">
+            <div className={`p-6 max-h-[500px] overflow-y-auto ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
               <div className="space-y-3">
                 {tasks.map((task, index) => {
                   const taskCompletion = taskCompletions as Record<string | number, boolean>;
@@ -121,7 +123,7 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="p-4 rounded-xl border transition-all duration-200 border-gray-200 bg-white hover:shadow-md group"
+                    className={`p-4 rounded-xl border transition-all duration-200 hover:shadow-md group ${theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}`}
                     style={{
                       borderLeftColor: event.color_code,
                       borderLeftWidth: '4px'
@@ -131,11 +133,11 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
                       <div className="flex items-start gap-3 flex-1">
                         <Calendar className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: event.color_code }} />
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-gray-900 font-medium">{event.title}</h3>
+                          <h3 className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{event.title}</h3>
                           {event.location && (
-                            <p className="text-sm text-gray-500 mt-1">📍 {event.location}</p>
+                            <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>📍 {event.location}</p>
                           )}
-                          <p className="text-sm text-gray-500 mt-1">
+                          <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                             {new Date(event.start_time).toLocaleTimeString('en-US', {
                               hour: '2-digit',
                               minute: '2-digit'
@@ -153,7 +155,7 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => onEditEvent?.(event)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className={`p-1.5 rounded-lg transition-colors ${theme === 'dark' ? 'text-blue-400 hover:bg-blue-500/20' : 'text-blue-600 hover:bg-blue-50'}`}
                           title="Edit event"
                         >
                           <Edit2 className="h-4 w-4" />
@@ -162,7 +164,7 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => onDeleteEvent?.(event.id as number)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className={`p-1.5 rounded-lg transition-colors ${theme === 'dark' ? 'text-red-400 hover:bg-red-500/20' : 'text-red-600 hover:bg-red-50'}`}
                           title="Delete event"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -175,7 +177,7 @@ export function DayDetailCard({ isOpen, onClose, day, month, tasks, events = [],
 
               {/* Empty State */}
               {tasks.length === 0 && events.length === 0 && (
-                <div className="text-center py-12">
+                <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                   <CalendarIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500">No tasks or events scheduled for this day</p>
                 </div>

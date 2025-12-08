@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { authService } from '../services/auth';
+import { useTheme } from '../context/ThemeContext';
 
 interface HeaderProps {
   currentMonth: Date;
@@ -18,6 +19,7 @@ interface HeaderProps {
 
 export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, sidebarMode, onSidebarToggle, onLogout, onProfileClick }: HeaderProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { theme } = useTheme();
   const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   
   const user = authService.getCurrentUser();
@@ -33,10 +35,10 @@ export function Header({ currentMonth, onPreviousMonth, onNextMonth, onAddTask, 
   };
 
   return (
-    <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
+    <header className={`border-b sticky top-0 z-10 transition-colors ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
       <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 sm:gap-4 lg:gap-8 min-w-0">
-          <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 truncate">ChronoTask</h1>
+          <h1 className={`text-sm sm:text-base lg:text-lg font-semibold truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>ChronoTask</h1>
           
           <div className="hidden sm:flex items-center gap-1 sm:gap-2">
             <Button 

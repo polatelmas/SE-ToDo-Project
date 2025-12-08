@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { DayDetailCard } from './DayDetailCard';
 import { Task, Event } from '../services/api';
 import { getLocalDateString, getTodayString } from '../services/dateUtils';
+import { useTheme } from '../context/ThemeContext';
 
 interface DayData {
   date: number;
@@ -31,6 +32,7 @@ interface CalendarGridProps {
 
 export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, recentlyCompleted, tasks = [], events = [], onAddTaskClick, onAddEventClick, onEditTask, onDeleteTask, onEditEvent, onDeleteEvent }: CalendarGridProps) {
   const days = generateCalendarDays(currentMonth, taskCompletions, tasks, events);
+  const { theme } = useTheme();
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const [selectedDay, setSelectedDay] = useState<{ day: number; dateStr: string; tasks: Task[]; events: Event[] } | null>(null);
 
@@ -45,13 +47,13 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
 
   return (
     <>
-      <div className="bg-white rounded-lg">
-        <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+      <div className={`rounded-lg transition-colors ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className={`grid grid-cols-7 gap-px border rounded-lg overflow-hidden transition-colors ${theme === 'dark' ? 'bg-gray-700 border-gray-700' : 'bg-gray-200 border-gray-200'}`}>
           {/* Week day headers */}
           {weekDays.map((day) => (
             <div 
               key={day} 
-              className="bg-gray-50 py-3 text-center text-gray-600 border-b border-gray-200"
+              className={`py-3 text-center border-b transition-colors ${theme === 'dark' ? 'bg-gray-700 text-gray-400 border-gray-600' : 'bg-gray-50 text-gray-600 border-gray-200'}`}
             >
               {day}
             </div>
@@ -63,13 +65,13 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
               key={index}
               onClick={() => handleDayClick(day)}
               disabled={!day.isCurrentMonth}
-              className={`bg-white min-h-[120px] p-3 relative transition-all duration-200 text-left ${
-                !day.isCurrentMonth ? 'bg-gray-50 cursor-default' : ''
+              className={`min-h-[120px] p-3 relative transition-all duration-200 text-left ${
+                !day.isCurrentMonth ? theme === 'dark' ? 'bg-gray-900 cursor-default' : 'bg-gray-50 cursor-default' : ''
               } ${
                 day.isCurrentMonth
-                  ? 'cursor-pointer hover:shadow-lg hover:shadow-blue-500/20 hover:border-2 hover:border-blue-400 hover:-translate-y-0.5 hover:z-10 active:scale-[0.98]'
+                  ? `cursor-pointer hover:shadow-lg hover:shadow-blue-500/20 hover:border-2 hover:border-blue-400 hover:-translate-y-0.5 hover:z-10 active:scale-[0.98] ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white'}`
                   : ''
-              }`}
+              } transition-colors`}
               style={{
                 outline: 'none'
               }}
