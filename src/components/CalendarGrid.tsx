@@ -2,6 +2,7 @@ import { StickyNote, Sparkles, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { DayDetailCard } from './DayDetailCard';
 import { Task, Event } from '../services/api';
+import { getLocalDateString, getTodayString } from '../services/dateUtils';
 
 interface DayData {
   date: number;
@@ -34,6 +35,9 @@ export function CalendarGrid({ currentMonth, taskCompletions, onToggleTask, rece
   const [selectedDay, setSelectedDay] = useState<{ day: number; dateStr: string; tasks: Task[]; events: Event[] } | null>(null);
 
   const handleDayClick = (day: DayData) => {
+    console.log('Day clicked:', day);
+    console.log('Tasks for this day:', day.tasks);
+    console.log('Events for this day:', day.events);
     setSelectedDay({ day: day.date, dateStr: day.dateStr, tasks: day.tasks, events: day.events });
   };
 
@@ -187,40 +191,52 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
   startDate.setDate(startDate.getDate() - firstDay.getDay());
   
   const days: DayData[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayStr = getTodayString();
   
-  // Group API tasks by YYYY-MM-DD date string
+  // Group API tasks by YYYY-MM-DD date string - FIXED: Handle any date format
   const tasksByDay: { [key: string]: Task[] } = {};
+  
+  console.log('📋 Processing tasks:', apiTasks);
   
   apiTasks.forEach(task => {
     if (task.due_date) {
-      const taskDateStr = task.due_date; // Assuming due_date is already YYYY-MM-DD format
-      if (!tasksByDay[taskDateStr]) {
-        tasksByDay[taskDateStr] = [];
+      // Safely convert any format to YYYY-MM-DD
+      const taskDateStr = getLocalDateString(task.due_date);
+      if (taskDateStr) {
+        console.log(`✓ Task "${task.title}" due_date: ${task.due_date} → ${taskDateStr}`);
+        if (!tasksByDay[taskDateStr]) {
+          tasksByDay[taskDateStr] = [];
+        }
+        tasksByDay[taskDateStr].push(task);
+      } else {
+        console.warn(`✗ Task "${task.title}" has invalid due_date: ${task.due_date}`);
       }
-      tasksByDay[taskDateStr].push(task);
     }
   });
 
-  // Group API events by YYYY-MM-DD date string from their start_time field
+  // Group API events by YYYY-MM-DD date string - FIXED: Handle ISO datetime properly
   const eventsByDay: { [key: string]: Event[] } = {};
+  
+  console.log('📅 Processing events:', apiEvents);
   
   apiEvents.forEach(event => {
     if (event.start_time) {
-      const eventDate = new Date(event.start_time);
-      // Use local date instead of ISO
-      const year = eventDate.getFullYear();
-      const month = String(eventDate.getMonth() + 1).padStart(2, '0');
-      const day = String(eventDate.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-      
-      if (!eventsByDay[dateStr]) {
-        eventsByDay[dateStr] = [];
+      // Safely convert ISO datetime to YYYY-MM-DD
+      const eventDateStr = getLocalDateString(event.start_time);
+      if (eventDateStr) {
+        console.log(`✓ Event "${event.title}" start_time: ${event.start_time} → ${eventDateStr}`);
+        if (!eventsByDay[eventDateStr]) {
+          eventsByDay[eventDateStr] = [];
+        }
+        eventsByDay[eventDateStr].push(event);
+      } else {
+        console.warn(`✗ Event "${event.title}" has invalid start_time: ${event.start_time}`);
       }
-      eventsByDay[dateStr].push(event);
     }
   });
+  
+  console.log('📊 Grouped tasks by day:', tasksByDay);
+  console.log('📊 Grouped events by day:', eventsByDay);
   
   for (let i = 0; i < 42; i++) {
     const date = new Date(startDate);
@@ -229,26 +245,21 @@ function generateCalendarDays(currentMonth: Date, taskCompletions: { [key: strin
     const dayOfMonth = date.getDate();
     const isCurrentMonth = date.getMonth() === month;
     
-    // Use local date instead of ISO (which uses UTC)
+    // Create YYYY-MM-DD string from local date
     const year = date.getFullYear();
     const month_num = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month_num}-${day}`;
     
-    // Also use local date for today comparison
-    const today_year = today.getFullYear();
-    const today_month = String(today.getMonth() + 1).padStart(2, '0');
-    const today_day = String(today.getDate()).padStart(2, '0');
-    const todayStr = `${today_year}-${today_month}-${today_day}`;
     const isToday = dateStr === todayStr;
     
-    // Get tasks for this specific date (year-month-day)
+    // Get tasks for this specific date
     const dayTasks = tasksByDay[dateStr] || [];
     
-    // Get events for this specific date (year-month-day)
+    // Get events for this specific date
     const dayEvents = eventsByDay[dateStr] || [];
     
-    // Map tasks with completion state
+    // Map tasks with completion state from taskCompletions
     const tasksWithCompletion: Task[] = dayTasks.map(task => ({
       ...task,
       status: taskCompletions?.[task.id as any] ? 'COMPLETED' : 'PENDING'
