@@ -49,10 +49,7 @@ class EventList : Fragment() {
 
         CoroutineScope(Dispatchers.IO).launch {
             val task = retrofit.login(login)
-            println(task.body())
-            println("çalıştı mı?")
-
-
+            println(task.code())
         }
     }
 
